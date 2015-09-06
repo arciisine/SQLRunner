@@ -110,8 +110,8 @@ INT(EGER)?                            { return 'INTEGER'; }
 "<="                                  { return 'LESS_THAN_OR_EQUAL'; }
 ">="                                  { return 'GREATER_THAN_OR_EQUAL'; }
 
-'[^'\n]*'                             { return 'STRING_LITERAL'; }
-'[^'\n]*$                             { throw new Error('UNTERMINATED_STRING_LITERAL'); }
+(')[^'\n]*(')                         { return 'STRING_LITERAL'; }
+(')[^'\n]*$                             { throw new Error('UNTERMINATED_STRING_LITERAL'); }
 
 "--.*"                                { return 'COMMENT'; }
 [ \r\t]+                              { return 'SPACE'; }
@@ -138,6 +138,9 @@ INT(EGER)?                            { return 'INTEGER'; }
 %start program
 
 %%
+
+program: sql_list
+    ;
 
 sql_list:
 		sql SEMICOLON { end_sql(); }
