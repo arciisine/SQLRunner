@@ -1,129 +1,128 @@
 %lex
 
 %%
-"ALL"                                 { return 'ALL'; }
-"AND"                                 { return 'AND'; }
-"AVG"                                 { return 'AVG'; }
-"MIN"                                 { return 'MIN'; }
-"MAX"                                 { return 'MAX'; }
-"SUM"                                 { return 'SUM'; }
-"COUNT"                               { return 'COUNT'; }
-"ANY"                                 { return 'ANY'; }
-"AS"                                  { return 'AS'; }
-"ASC"                                 { return 'ASC'; }
-"AUTHORIZATION"                       { return 'AUTHORIZATION'; }
-"BETWEEN"                             { return 'BETWEEN'; }
-"BY"                                  { return 'BY'; }
-CHAR(ACTER)?                          { return 'CHARACTER'; }
-"CHECK"                               { return 'CHECK'; }
-"CLOSE"                               { return 'CLOSE'; }
-"COMMIT"                              { return 'COMMIT'; }
-"CONTINUE"                            { return 'CONTINUE'; }
-"CREATE"                              { return 'CREATE'; }
-"CURRENT"                             { return 'CURRENT'; }
-"CURSOR"                              { return 'CURSOR'; }
-"DECIMAL"                             { return 'DECIMAL'; }
-"DECLARE"                             { return 'DECLARE'; }
-"DEFAULT"                             { return 'DEFAULT'; }
-"DELETE"                              { return 'DELETE'; }
-"DESC"                                { return 'DESC'; }
-"DISTINCT"                            { return 'DISTINCT'; }
-"DOUBLE"                              { return 'DOUBLE'; }
-"ESCAPE"                              { return 'ESCAPE'; }
-"EXISTS"                              { return 'EXISTS'; }
-"FETCH"                               { return 'FETCH'; }
-"FLOAT"                               { return 'FLOAT'; }
-"FOR"                                 { return 'FOR'; }
-"FOREIGN"                             { return 'FOREIGN'; }
-"FOUND"                               { return 'FOUND'; }
-"FROM"                                { return 'FROM'; }
-GO[ \t]TO                             { return 'GOTO'; }
-"GRANT"                               { return 'GRANT'; }
-"GROUP"                               { return 'GROUP'; }
-"HAVING"                              { return 'HAVING'; }
-"IN"                                  { return 'IN'; }
-"INDICATOR"                           { return 'INDICATOR'; }
-"INSERT"                              { return 'INSERT'; }
-INT(EGER)?                            { return 'INTEGER'; }
-"INTO"                                { return 'INTO'; }
-"IS"                                  { return 'IS'; }
-"KEY"                                 { return 'KEY'; }
-"LANGUAGE"                            { return 'LANGUAGE'; }
-"LIKE"                                { return 'LIKE'; }
-"NOT"                                 { return 'NOT'; }
-"NULL"                                { return 'NULLX'; }
-"NUMERIC"                             { return 'NUMERIC'; }
-"OF"                                  { return 'OF'; }
-"ON"                                  { return 'ON'; }
-"OPEN"                                { return 'OPEN'; }
-"OPTION"                              { return 'OPTION'; }
-"OR"                                  { return 'OR'; }
-"ORDER"                               { return 'ORDER'; }
-"PRECISION"                           { return 'PRECISION'; }
-"PRIMARY"                             { return 'PRIMARY'; }
-"PRIVILEGES"                          { return 'PRIVILEGES'; }
-"PROCEDURE"                           { return 'PROCEDURE'; }
-"PUBLIC"                              { return 'PUBLIC'; }
-"REAL"                                { return 'REAL'; }
-"REFERENCES"                          { return 'REFERENCES'; }
-"ROLLBACK"                            { return 'ROLLBACK'; }
-"SCHEMA"                              { return 'SCHEMA'; }
-"SELECT"                              { return 'SELECT'; }
-"SET"                                 { return 'SET'; }
-"SMALLINT"                            { return 'SMALLINT'; }
-"SOME"                                { return 'SOME'; }
-"SQLCODE"                             { return 'SQLCODE'; }
-"TABLE"                               { return 'TABLE'; }
-"TO"                                  { return 'TO'; }
-"UNION"                               { return 'UNION'; }
-"UPDATE"                              { return 'UPDATE'; }
-"USER"                                { return 'USER'; }
-"VALUES"                              { return 'VALUES'; }
-"VIEW"                                { return 'VIEW'; }
-"WHENEVER"                            { return 'WHENEVER'; }
-"WHERE"                               { return 'WHERE'; }
-"WITH"                                { return 'WITH'; }
-"WORK"                                { return 'WORK'; }
+"ALL"                                 return 'ALL';
+"AND"                                 return 'AND';
+"AVG"                                 return 'AVG';
+"MIN"                                 return 'MIN';
+"MAX"                                 return 'MAX';
+"SUM"                                 return 'SUM';
+"COUNT"                               return 'COUNT';
+"ANY"                                 return 'ANY';
+"AS"                                  return 'AS';
+"ASC"                                 return 'ASC';
+"AUTHORIZATION"                       return 'AUTHORIZATION';
+"BETWEEN"                             return 'BETWEEN';
+"BY"                                  return 'BY';
+CHAR(ACTER)?                          return 'CHARACTER';
+"CHECK"                               return 'CHECK';
+"CLOSE"                               return 'CLOSE';
+"COMMIT"                              return 'COMMIT';
+"CONTINUE"                            return 'CONTINUE';
+"CREATE"                              return 'CREATE';
+"CURRENT"                             return 'CURRENT';
+"CURSOR"                              return 'CURSOR';
+"DECIMAL"                             return 'DECIMAL';
+"DECLARE"                             return 'DECLARE';
+"DEFAULT"                             return 'DEFAULT';
+"DELETE"                              return 'DELETE';
+"DESC"                                return 'DESC';
+"DISTINCT"                            return 'DISTINCT';
+"DOUBLE"                              return 'DOUBLE';
+"ESCAPE"                              return 'ESCAPE';
+"EXISTS"                              return 'EXISTS';
+"FETCH"                               return 'FETCH';
+"FLOAT"                               return 'FLOAT';
+"FOR"                                 return 'FOR';
+"FOREIGN"                             return 'FOREIGN';
+"FOUND"                               return 'FOUND';
+"FROM"                                return 'FROM';
+GO[ \t]TO                             return 'GOTO';
+"GRANT"                               return 'GRANT';
+"GROUP"                               return 'GROUP';
+"HAVING"                              return 'HAVING';
+"IN"                                  return 'IN';
+"INDICATOR"                           return 'INDICATOR';
+"INSERT"                              return 'INSERT';
+INT(EGER)?                            return 'INTEGER';
+"INTO"                                return 'INTO';
+"IS"                                  return 'IS';
+"KEY"                                 return 'KEY';
+"LANGUAGE"                            return 'LANGUAGE';
+"LIKE"                                return 'LIKE';
+"NOT"                                 return 'NOT';
+"NULL"                                return 'NULLX';
+"NUMERIC"                             return 'NUMERIC';
+"OF"                                  return 'OF';
+"ON"                                  return 'ON';
+"OPEN"                                return 'OPEN';
+"OPTION"                              return 'OPTION';
+"OR"                                  return 'OR';
+"ORDER"                               return 'ORDER';
+"PRECISION"                           return 'PRECISION';
+"PRIMARY"                             return 'PRIMARY';
+"PRIVILEGES"                          return 'PRIVILEGES';
+"PROCEDURE"                           return 'PROCEDURE';
+"PUBLIC"                              return 'PUBLIC';
+"REAL"                                return 'REAL';
+"REFERENCES"                          return 'REFERENCES';
+"ROLLBACK"                            return 'ROLLBACK';
+"SCHEMA"                              return 'SCHEMA';
+"SELECT"                              return 'SELECT';
+"SET"                                 return 'SET';
+"SMALLINT"                            return 'SMALLINT';
+"SOME"                                return 'SOME';
+"SQLCODE"                             return 'SQLCODE';
+"TABLE"                               return 'TABLE';
+"TO"                                  return 'TO';
+"UNION"                               return 'UNION';
+"UPDATE"                              return 'UPDATE';
+"USER"                                return 'USER';
+"VALUES"                              return 'VALUES';
+"VIEW"                                return 'VIEW';
+"WHENEVER"                            return 'WHENEVER';
+"WHERE"                               return 'WHERE';
+"WITH"                                return 'WITH';
+"WORK"                                return 'WORK';
 
-'"'                                   { return 'DOUBLE_QUOTE'; }
-"%"                                   { return 'PERCENT'; }
-"&"                                   { return 'AMPERSAND'; }
-"'"                                   { return 'QUOTE'; }
-"("                                   { return 'LEFT_PAREN'; }
-")"                                   { return 'RIGHT_PAREN'; }
-"."                                   { return 'PERIOD'; }
-":"                                   { return 'COLON'; }
-","                                   { return 'COMMA'; }
-";"                                   { return 'SEMICOLON'; }
-"|"                                   { return 'VERTICAL_BAR'; }
-"?"                                   { return 'QUESTION_MARK'; }
-"^"                                   { return 'CARET'; }
+'"'                                   return 'DOUBLE_QUOTE';
+"%"                                   return 'PERCENT';
+"&"                                   return 'AMPERSAND';
+"'"                                   return 'QUOTE';
+"("                                   return 'LEFT_PAREN';
+")"                                   return 'RIGHT_PAREN';
+"."                                   return 'PERIOD';
+":"                                   return 'COLON';
+","                                   return 'COMMA';
+";"                                   return 'SEMICOLON';
+"|"                                   return 'VERTICAL_BAR';
+"?"                                   return 'QUESTION_MARK';
+"^"                                   return 'CARET';
 
-"*"                                   { return 'ASTERISK'; }
-"/"                                   { return 'DIVIDE'; }
-"+"                                   { return 'PLUS'; }
-"-"                                   { return 'MINUS'; }
-"="                                   { return 'EQUAL'; }
-"<>"                                  { return 'NOT_EQUAL'; }
-"<"                                   { return 'LESS_THAN'; }
-">"                                   { return 'GREATER_THAN'; }
-"<="                                  { return 'LESS_THAN_OR_EQUAL'; }
-">="                                  { return 'GREATER_THAN_OR_EQUAL'; }
+"*"                                   return 'ASTERISK';
+"/"                                   return 'DIVIDE';
+"+"                                   return 'PLUS';
+"-"                                   return 'MINUS';
+"="                                   return 'EQUAL';
+"<>"                                  return 'NOT_EQUAL';
+"<"                                   return 'LESS_THAN';
+">"                                   return 'GREATER_THAN';
+"<="                                  return 'LESS_THAN_OR_EQUAL';
+">="                                  return 'GREATER_THAN_OR_EQUAL';
 
-(')[^'\n]*(')                         { return 'STRING_LITERAL'; }
-(')[^'\n]*$                             { throw new Error('UNTERMINATED_STRING_LITERAL'); }
+\'[^'\n]*\'                           return 'STRING_LITERAL';
 
-"--.*"                                { return 'COMMENT'; }
-[ \r\t]+                              { return 'SPACE'; }
-
+"--.*"                                return 'COMMENT';
+[ \r\t]+                              return 'SPACE';
 
 
 
-\d+|\.\d+|\d\.\d*                     { return 'INTEGER_LITERAL'; }
-\d+[eE][+-]?\d+|\d\.\d*[eE][+-]?\d+|\.\d*[eE][+-]?\d+ { return 'SCIENTIFIC_INTEGER_LITERAL'; }
 
-([A-Za-z][A-Za-z0-9_.]*)              { return 'IDENTIFIER'; }
-<<EOF>>                               { return 'EOF'; }
+\d+|\.\d+|\d\.\d*                     return 'INTEGER_LITERAL';
+\d+[eE][+-]?\d+|\d\.\d*[eE][+-]?\d+|\.\d*[eE][+-]?\d+ return 'SCIENTIFIC_INTEGER_LITERAL';
+
+[A-Za-z][A-Za-z0-9_.]*                return 'IDENTIFIER';
+<<EOF>>                               return 'EOF';
 
 /lex
 
