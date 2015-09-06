@@ -143,8 +143,8 @@ program: sql_list
     ;
 
 sql_list:
-		sql SEMICOLON { end_sql(); }
-	|	sql_list sql SEMICOLON { end_sql(); }
+		sql SEMICOLON
+	|	sql_list sql SEMICOLON
 	;
 
 
@@ -668,4 +668,3 @@ sql:		WHENEVER NOT FOUND when_action
 when_action:	GOTO IDENTIFIER
 	|	CONTINUE
 	;
-%%
