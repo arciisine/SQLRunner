@@ -588,6 +588,15 @@ parameter_ref:
 	|	parameter INDICATOR parameter
 	;
 
+builtin_fn:
+        ABS
+    |   AVG
+    |   MIN
+    |   MAX
+    |   SUM
+    |   COUNT
+    ;
+
 function_ref:
 		builtin_fn LEFT_PAREN ASTERISK RIGHT_PAREN
 	|	builtin_fn LEFT_PAREN DISTINCT column_ref RIGHT_PAREN
