@@ -1,4 +1,4 @@
-
+import {Statement} from '../index';
 
 export class WhenAction {}
 export class ContinueWhenAction{}

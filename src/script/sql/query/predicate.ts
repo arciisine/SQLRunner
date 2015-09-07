@@ -1,11 +1,16 @@
-import {ColumnRef,SearchCondition,Predicate} from '../common/base';
-import {Literal, StringLiteral} from '../common/literal';
-import {ScalarExpr, ComparisonExprOperator} from '../common/scalar';
+import {SearchCondition} from './search-condition'
+import {Literal} from '../common/literal';
+import {ScalarExpr} from '../common/scalar';
+import {ColumnRef} from '../common/ref';
+import {StringLiteral} from '../common/literal';
+import {ComparisonExprOperator} from '../common/scalar';
 import {SelectQuery} from './index';
 
 enum QueryComparisonOperator {
 	ANY, ALL, SOME
 }
+
+export class Predicate extends SearchCondition {}
 
 export class ComparisonPredicate extends Predicate {
 	left:ScalarExpr;

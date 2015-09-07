@@ -9,6 +9,5 @@
   },
   "_source": "git://github.com/kripken/sql.js.git",
   "_target": "*",
-  "_originalSource": "sql.js",
-  "_direct": true
+  "_originalSource": "sql.js"
 }

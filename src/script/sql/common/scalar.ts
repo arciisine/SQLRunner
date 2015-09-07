@@ -1,4 +1,5 @@
-import {Atom, ColumnRef} from './base';
+import {Atom} from '../common/literal';
+import {ColumnRef} from '../common/ref';
 
 export enum BinaryExprOperator {
 	PLUS, MINUS, ASTERISK, DIVIDE;
@@ -13,6 +14,8 @@ export enum ComparisonExprOperator {
 	LESS_THAN, GREATER_THAN,
 	LESS_THAN_EQUAL, GREATER_THAN_EQUAL 
 }
+
+export class ScalarExpr extends ASTNode {}
 
 export class AtomExpr extends ScalarExpr {
 	value:Atom;

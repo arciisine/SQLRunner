@@ -1,22 +1,25 @@
-import {Atom,Null} from './base';
+import {ASTNode} from '../index';
+import {ParameterRef} from '../common/ref';
 
-class Parameter extends Atom {
+export class Null extends ASTNode {}
+export class Atom extends ASTNode {}
+export class Literal extends Atom {}
+export type NullableLiteral = Literal|Null;
+
+
+export class Parameter extends Atom {
 	parameter:ParameterRef;
 }
 
-class Literal extends Atom {}
-
-class StringLiteral extends Literal {
+export class StringLiteral extends Literal {
 	value:string;
 }
 
-class NumberLiteral extends Literal {
+export class NumberLiteral extends Literal {
 	value:number;
 }
 
-class ScientificNumberLiteral extends Literal {
+export class ScientificNumberLiteral extends Literal {
 	value:number;
 	precision:number
 }
-
-type NullableLiteral = Literal|Null;

@@ -1,26 +1,29 @@
-import {Constraint, SearchCondition, TableRef} from '../common/base';
+import {ASTNode} from '../index';
+import {TableRef} from '../common/ref';
+import {SearchCondition} from '../query/search-condition';
 
-class ForeignKeyConstaint extends Constraint {
+export class Constraint extends ASTNode {}
+export class TableConstraint extends Constraint {}
+
+export class ForeignKeyConstaint extends Constraint {
 	table:TableRef;
 	columns:Array<string>;
 }
 
-class TableConstraint extends Constraint {}
-
-class TableForeignKeyConstraint extends TableConstraint {
+export class TableForeignKeyConstraint extends TableConstraint {
 	sourceColumns:Array<string>;
 	table:TableRef;
 	columns:Array<string>;
 }
 
-class UniqueKeyConstraint extends TableConstraint {
+export class UniqueKeyConstraint extends TableConstraint {
 	columns:Array<string>;
 }
 
-class PrimaryKeyConstraint extends TableConstraint {
+export class PrimaryKeyConstraint extends TableConstraint {
 	columns:Array<string>;
 }
 
-class CheckConstraint extends TableConstraint {
+export class CheckConstraint extends TableConstraint {
 	searchCondition:SearchCondition;
 }

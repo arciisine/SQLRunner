@@ -1,4 +1,8 @@
-import {ColumnType} from '../common/base';
+import {ASTNode} from '../index';
+
+export class ColumnType extends ASTNode {
+	size:number
+}
 
 export class CharacterColumnType extends ColumnType {}
 export class IntegerColumnType extends ColumnType {}

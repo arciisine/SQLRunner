@@ -1,4 +1,6 @@
-import {SearchCondition, Predicate} from '../common/base';
+import {ASTNode} from '../index';
+
+export class SearchCondition extends ASTNode {}
 
 enum SearchConditionOperator {
 	AND, OR

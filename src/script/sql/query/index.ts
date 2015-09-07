@@ -1,6 +1,6 @@
-export class Query extends Statement {
-	
-}
+import {Statement} from '../index';
+
+export class Query extends Statement {}
 
 class SelectQuery extends Query {
 	

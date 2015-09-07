@@ -1,3 +1,4 @@
+import {Statement} from '../index';
 import {SelectQuery} from '../query/index';
 import {OrderBy} from '../query/orderby';
 

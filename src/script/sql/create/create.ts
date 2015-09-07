@@ -1,10 +1,17 @@
-import {ASTNode} from '../common/base';
+import {ASTNode, Statement} from '../index';
 
-class Schema extends ASTNode {
-	
-}
+import {TableRef} from '../common/ref'; 
+import {NullableLiteral} from '../common/literal'
 
-class ColumnSchema extends Schema {
+import {SelectQuery} form '../query/index';
+import {SearchCondition} from '../query/search-condition';
+
+import {ColumnType} from './column-type';
+import {TableConstraint} from './constraint';
+
+export class Schema extends ASTNode {}
+
+export class ColumnSchema extends Schema {
 	name:String;
 	type:ColumnType;
 	notNull:boolean;
@@ -15,20 +22,18 @@ class ColumnSchema extends Schema {
 	reference:ForeignKeyConstraint;
 }
 
-class TableSchema extends Schema {
+export class TableSchema extends Schema {
 	name:TableRef;
 	columns:Array<ColumnSchema>;
 	constraints:Array<TableConstraint>;
 }
 
-class ViewSchema extends Schema {
+export class ViewSchema extends Schema {
 	name:TableRef;
 	columns:Array<string>;
-	query:SelectQueryNode;
+	query:SelectQuery;
 	checkOption:boolean;
 }
-
-
 
 export class CreateSchemaStatement extends Statement {
 	user:string;

@@ -1,4 +1,5 @@
-import {ASTNode} from '../common/base';
+import {ASTNode} from '../index';
+
 
 enum BasicQueryGrantOperation {
 	SELECT, INSERT, DELETE
@@ -9,14 +10,13 @@ enum ComplexQueryGrantOperation {
 }
 
 class Grantee extends ASTNode {}
+class GrantOperation extends ASTNode {}
 
 class PublicGrantee extends Grantee {}
 
 class UserGrantee extends Grantee {
 	name:string;
 }
-
-class GrantOperation extends ASTNode {}
 
 class AllGrantOperation extends GrantOperation {}
 
