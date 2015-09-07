@@ -125,6 +125,9 @@ INT(EGER)?                            return 'INTEGER';
 
 /lex
 
+%{
+}%
+
 %left OR
 %left AND
 %left NOT
