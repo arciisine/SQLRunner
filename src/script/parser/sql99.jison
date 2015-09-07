@@ -135,6 +135,7 @@ INT(EGER)?                            return 'INTEGER';
 
 %start program
 
+
 %%
 
 program: sql_list
@@ -474,28 +475,7 @@ sql:
 
 
 cursor_def:
-		DECLARE cursor CURSOR FOR query_exp opt_order_by_clause
-	;
-
-opt_order_by_clause:
-		/* empty */
-	|	ORDER BY ordering_spec_commalist
-	;
-
-ordering_spec_commalist:
-		ordering_spec
-	|	ordering_spec_commalist COMMA ordering_spec
-	;
-
-ordering_spec:
-		NUMBER_LITERAL opt_asc_desc
-	|	column_ref opt_asc_desc
-	;
-
-opt_asc_desc:
-		/* empty */
-	|	ASC
-	|	DESC
+		DECLARE cursor CURSOR FOR query_exp
 	;
 
 	/* manipulative statements */
@@ -574,18 +554,16 @@ select_statement:
     SELECT opt_all_distinct selection
     opt_into_clause
     table_exp
-	opt_order_by_clause
     ;
 
 select_read_only_statement:
     SELECT opt_all_distinct selection
     table_exp
-	opt_order_by_clause
     ;
 
 select_inner_statement:
     SELECT opt_all_distinct selection
-    table_exp
+    table_exp_inner
     ;
 
 opt_all_distinct:
@@ -650,6 +628,14 @@ table_exp:
 		opt_where_clause
 		opt_group_by_clause
 		opt_having_clause
+		opt_order_by_clause
+	;
+	
+table_exp_inner:
+		from_clause
+		opt_where_clause
+		opt_group_by_clause
+		opt_having_clause
 	;
 
 from_clause:
@@ -685,12 +671,34 @@ opt_having_clause:
 	|	HAVING search_condition
 	;
 
+opt_order_by_clause:
+		/* empty */
+	|	ORDER BY ordering_spec_commalist
+	;
+
+ordering_spec_commalist:
+		ordering_spec
+	|	ordering_spec_commalist COMMA ordering_spec
+	;
+
+ordering_spec:
+		NUMBER_LITERAL opt_asc_desc
+	|	column_ref opt_asc_desc
+	;
+
+opt_asc_desc:
+		/* empty */
+	|	ASC
+	|	DESC
+	;
 
 	/* embedded condition things */
-sql:		WHENEVER NOT FOUND when_action
+sql:		
+		WHENEVER NOT FOUND when_action
 	|	WHENEVER SQLERROR when_action
 	;
 
-when_action:	GOTO IDENTIFIER
+when_action:	
+		GOTO IDENTIFIER
 	|	CONTINUE
 	;
