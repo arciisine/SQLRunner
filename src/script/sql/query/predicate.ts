@@ -1,10 +1,9 @@
-import {SearchCondition} from './search-condition'
-import {Literal} from '../common/literal';
-import {ScalarExpr} from '../common/scalar';
+import {StringLiteral,Literal} from '../common/literal';
+import {ScalarExpr, ComparisonExprOperator} from '../common/scalar';
 import {ColumnRef} from '../common/ref';
-import {StringLiteral} from '../common/literal';
-import {ComparisonExprOperator} from '../common/scalar';
-import {SelectQuery} from './index';
+
+import {SearchCondition} from './search-condition'
+import {SelectQuery} from './select';
 
 enum QueryComparisonOperator {
 	ANY, ALL, SOME

@@ -5,6 +5,7 @@ export class Null extends ASTNode {}
 export class Atom extends ASTNode {}
 export class Literal extends Atom {}
 export type NullableLiteral = Literal|Null;
+export type NullableAtom = Atom|Null;
 
 
 export class Parameter extends Atom {

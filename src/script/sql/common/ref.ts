@@ -6,6 +6,7 @@ export class ColumnRef extends Ref {
 	name:string;
 	table:string;
 	tablespace:string;
+	alias:string;
 }
 
 export class ParameterRef extends Ref {
@@ -16,4 +17,5 @@ export class ParameterRef extends Ref {
 export class TableRef extends Ref {
 	name:string;
 	tablespace:string;
+	alias:string;
 }

@@ -190,6 +190,154 @@ data_type:
 	|	DOUBLE PRECISION
 	;
 
+	/* search conditions */
+
+search_condition:
+	|	search_condition OR search_condition
+	|	search_condition AND search_condition
+	|	NOT search_condition
+	|	LEFT_PAREN search_condition RIGHT_PAREN
+	|	predicate
+	;
+
+predicate:
+		comparison_predicate
+	|	between_predicate
+	|	like_predicate
+	|	test_for_null
+	|	in_predicate
+	|	all_or_any_predicate
+	|	existence_test
+	;
+
+comparison:
+    EQUAL
+    | NOT_EQUAL
+    | LESS_THAN
+    | GREATER_THAN
+    | LESS_THAN_EQUAL
+    | GREATER_THAN_EQUAL
+    ;
+
+comparison_predicate:
+		scalar_exp comparison scalar_exp
+	|	scalar_exp comparison subquery
+	;
+
+between_predicate:
+		scalar_exp NOT BETWEEN scalar_exp AND scalar_exp
+	|	scalar_exp BETWEEN scalar_exp AND scalar_exp
+	;
+
+like_predicate:
+		scalar_exp NOT LIKE STRING_LITERAL opt_escape
+	|	scalar_exp LIKE STRING_LITERAL opt_escape
+	;
+
+opt_escape:
+		/* empty */
+	|	ESCAPE STRING_LITERAL
+	;
+
+test_for_null:
+		column_ref IS NOT NULLX
+	|	column_ref IS NULLX
+	;
+
+in_predicate:
+		scalar_exp NOT IN LEFT_PAREN subquery RIGHT_PAREN
+	|	scalar_exp IN LEFT_PAREN subquery RIGHT_PAREN
+	|	scalar_exp NOT IN LEFT_PAREN atom_commalist RIGHT_PAREN
+	|	scalar_exp IN LEFT_PAREN atom_commalist RIGHT_PAREN
+	;
+
+atom_commalist:
+		atom
+	|	atom_commalist COMMA atom
+	;
+
+all_or_any_predicate:
+		scalar_exp comparison any_all_some subquery
+	;
+
+any_all_some:
+		ANY
+	|	ALL
+	|	SOME
+	;
+
+existence_test:
+		EXISTS subquery
+	;
+
+subquery:
+		LEFT_PAREN select_inner_statement RIGHT_PAREN
+	;
+
+	/* scalar expressions */
+
+scalar_exp:
+		scalar_exp PLUS scalar_exp
+	|	scalar_exp MINUS scalar_exp
+	|	scalar_exp ASTERISK scalar_exp
+	|	scalar_exp DIVIDE scalar_exp
+	|	PLUS scalar_exp %prec UMINUS
+	|	MINUS scalar_exp %prec UMINUS
+	|	atom
+	|	column_ref
+	|	function_ref
+	|	LEFT_PAREN scalar_exp RIGHT_PAREN
+	;
+
+scalar_exp_commalist:
+		scalar_exp
+	|   scalar_exp AS alias
+	|	scalar_exp_commalist COMMA scalar_exp
+	|	scalar_exp_commalist COMMA scalar_exp AS alias
+	;
+
+atom:
+		parameter_ref
+	|	literal
+	|	USER
+	;
+
+parameter_ref:
+		parameter
+	|	parameter parameter
+	|	parameter INDICATOR parameter
+	;
+
+builtin_fn:
+        ABS
+    |   AVG
+    |   MIN
+    |   MAX
+    |   SUM
+    |   COUNT
+    ;
+
+function_ref:
+		builtin_fn LEFT_PAREN ASTERISK RIGHT_PAREN
+	|	builtin_fn LEFT_PAREN DISTINCT column_ref RIGHT_PAREN
+	|	builtin_fn LEFT_PAREN ALL scalar_exp RIGHT_PAREN
+	|	builtin_fn LEFT_PAREN scalar_exp RIGHT_PAREN
+	;
+
+
+	/* miscellaneous */
+
+table:
+		IDENTIFIER
+	|	IDENTIFIER PERIOD IDENTIFIER
+	;
+
+column_ref:
+		IDENTIFIER
+	|	IDENTIFIER PERIOD IDENTIFIER	/* needs semantics */
+	|	IDENTIFIER PERIOD IDENTIFIER PERIOD IDENTIFIER
+	;
+
 	/* schema definition language */
 sql:		schema
 	;
@@ -266,7 +414,7 @@ column_commalist:
 
 view_def:
 		CREATE VIEW table opt_column_commalist
-		AS select_read_only_statement opt_with_check_option
+		AS select_inner_statement opt_with_check_option
 	;
 
 opt_with_check_option:
@@ -375,6 +523,7 @@ close_statement:
 
 commit_statement:
 		COMMIT WORK
+	|	COMMIT
 	;
 
 delete_statement_positioned:
@@ -395,7 +544,7 @@ insert_statement:
 
 values_or_query_spec:
 		VALUES LEFT_PAREN insert_atom_commalist RIGHT_PAREN
-	|	select_read_only_statement
+	|	select_inner_statement
 	;
 
 insert_atom_commalist:
@@ -414,6 +563,7 @@ open_statement:
 
 rollback_statement:
 		ROLLBACK WORK
+	|	ROLLBACK
 	;
 
 opt_into_clause:
@@ -424,9 +574,16 @@ select_statement:
     SELECT opt_all_distinct selection
     opt_into_clause
     table_exp
+	opt_order_by_clause
     ;
 
 select_read_only_statement:
+    SELECT opt_all_distinct selection
+    table_exp
+	opt_order_by_clause
+    ;
+
+select_inner_statement:
     SELECT opt_all_distinct selection
     table_exp
     ;
@@ -528,151 +685,6 @@ opt_having_clause:
 	|	HAVING search_condition
 	;
 
-	/* search conditions */
-
-search_condition:
-	|	search_condition OR search_condition
-	|	search_condition AND search_condition
-	|	NOT search_condition
-	|	LEFT_PAREN search_condition RIGHT_PAREN
-	|	predicate
-	;
-
-predicate:
-		comparison_predicate
-	|	between_predicate
-	|	like_predicate
-	|	test_for_null
-	|	in_predicate
-	|	all_or_any_predicate
-	|	existence_test
-	;
-
-comparison:
-    EQUAL
-    | NOT_EQUAL
-    | LESS_THAN
-    | GREATER_THAN
-    | LESS_THAN_EQUAL
-    | GREATER_THAN_EQUAL
-    ;
-
-comparison_predicate:
-		scalar_exp comparison scalar_exp
-	|	scalar_exp comparison subquery
-	;
-
-between_predicate:
-		scalar_exp NOT BETWEEN scalar_exp AND scalar_exp
-	|	scalar_exp BETWEEN scalar_exp AND scalar_exp
-	;
-
-like_predicate:
-		scalar_exp NOT LIKE STRING_LITERAL opt_escape
-	|	scalar_exp LIKE STRING_LITERAL opt_escape
-	;
-
-opt_escape:
-		/* empty */
-	|	ESCAPE STRING_LITERAL
-	;
-
-test_for_null:
-		column_ref IS NOT NULLX
-	|	column_ref IS NULLX
-	;
-
-in_predicate:
-		scalar_exp NOT IN LEFT_PAREN subquery RIGHT_PAREN
-	|	scalar_exp IN LEFT_PAREN subquery RIGHT_PAREN
-	|	scalar_exp NOT IN LEFT_PAREN atom_commalist RIGHT_PAREN
-	|	scalar_exp IN LEFT_PAREN atom_commalist RIGHT_PAREN
-	;
-
-atom_commalist:
-		atom
-	|	atom_commalist COMMA atom
-	;
-
-all_or_any_predicate:
-		scalar_exp comparison any_all_some subquery
-	;
-
-any_all_some:
-		ANY
-	|	ALL
-	|	SOME
-	;
-
-existence_test:
-		EXISTS subquery
-	;
-
-subquery:
-		LEFT_PAREN select_read_only_statement RIGHT_PAREN
-	;
-
-	/* scalar expressions */
-
-scalar_exp:
-		scalar_exp PLUS scalar_exp
-	|	scalar_exp MINUS scalar_exp
-	|	scalar_exp ASTERISK scalar_exp
-	|	scalar_exp DIVIDE scalar_exp
-	|	PLUS scalar_exp %prec UMINUS
-	|	MINUS scalar_exp %prec UMINUS
-	|	atom
-	|	column_ref
-	|	function_ref
-	|	LEFT_PAREN scalar_exp RIGHT_PAREN
-	;
-
-scalar_exp_commalist:
-		scalar_exp
-	|	scalar_exp_commalist COMMA scalar_exp
-	;
-
-atom:
-		parameter_ref
-	|	literal
-	|	USER
-	;
-
-parameter_ref:
-		parameter
-	|	parameter parameter
-	|	parameter INDICATOR parameter
-	;
-
-builtin_fn:
-        ABS
-    |   AVG
-    |   MIN
-    |   MAX
-    |   SUM
-    |   COUNT
-    ;
-
-function_ref:
-		builtin_fn LEFT_PAREN ASTERISK RIGHT_PAREN
-	|	builtin_fn LEFT_PAREN DISTINCT column_ref RIGHT_PAREN
-	|	builtin_fn LEFT_PAREN ALL scalar_exp RIGHT_PAREN
-	|	builtin_fn LEFT_PAREN scalar_exp RIGHT_PAREN
-	;
-
-
-	/* miscellaneous */
-
-table:
-		IDENTIFIER
-	|	IDENTIFIER PERIOD IDENTIFIER
-	;
-
-column_ref:
-		IDENTIFIER
-	|	IDENTIFIER PERIOD IDENTIFIER	/* needs semantics */
-	|	IDENTIFIER PERIOD IDENTIFIER PERIOD IDENTIFIER
-	;
 
 	/* embedded condition things */
 sql:		WHENEVER NOT FOUND when_action
