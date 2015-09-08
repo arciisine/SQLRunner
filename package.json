@@ -18,7 +18,12 @@
     "gulp-sourcemaps": "^1.5.2",
     "gulp-typescript": "^2.8.2",
     "jison": "^0.4.15",
-    "through2": "^2.0.0",
-    "typescript": "^1.6.0-dev.20150908"
+    "through2": "^2.0.0"
+  },
+  "dependencies": {
+    "sql.js": "^0.2.21",
+    "systemjs": "^0.18.17",
+		"zip.js": "git://github.com/timothysoehnlin/zip.js.git",
+    "typescript" : "^1.6.0-dev.20150908" 
   }
 }

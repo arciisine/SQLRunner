@@ -1,3 +1,5 @@
+/* Derived from http://yaxx.googlecode.com/svn/trunk/sql/scn2.l */
+
 %lex
 
 %%
@@ -135,6 +137,8 @@ INT(EGER)?                            return 'INTEGER';
 
 /lex
 
+/* Derived from http://yaxx.googlecode.com/svn/trunk/sql/sql2.y */
+
 %left OR
 %left AND
 %left NOT
@@ -147,8 +151,8 @@ INT(EGER)?                            return 'INTEGER';
 %start program
 
 %{
-import {Atom} from '../sql/common/literal';
-import {ParameterRef} from '../sql/common/ref';
+import {Atom} from '../common/literal';
+import {ParameterRef} from '../common/ref';
 %}
 
 %%

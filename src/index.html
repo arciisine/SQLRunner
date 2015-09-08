@@ -1,20 +1,22 @@
 <html>
 	<head>
 		<title>SQL Manager</title>
-		<script src="bower_components/system.js/dist/system.js"></script>
+		<script src="node_modules/systemjs/dist/system.js"></script>
 		<script>
+			System.defaultJSExtensions = true;
 			System.config({
-				baseURL: 'dist/script'
+				baseURL: 'dist/script/'
   			});
 		</script>
-		<script src="bower_components/sql.js/js/sql.js"></script>
-		<script src="bower_components/zip.js/WebContent/zip.js"></script>
+		<script src="node_modules/sql.js/js/sql.js"></script>
+		<script src="node_modules/zip.js/WebContent/zip.js"></script>
 		<script>
-			zip.workerScriptsPath = "bower_components/zip.js/WebContent/";
+			zip.workerScriptsPath = "node_modules/zip.js/WebContent/";
 		</script>
-		<script src="dist/script/all.js"></script>
 		<script>
-			System.import('app');
+			System.import('app.js').then(function(start) {
+				start.app();
+			});
 		</script>
 	</head>
 	<body>

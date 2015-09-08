@@ -1,7 +1,5 @@
-import Parser from './sql/grammar/sql99';
+import {parser} from './sql/grammar/sql99';
 
 export function app() {
-	console.log(Parser("SELECT * FROM Users u"));
+	console.log(parser.Parser("SELECT * FROM Users z"));
 }
-
-function* test () {}
