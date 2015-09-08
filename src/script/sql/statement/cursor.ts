@@ -1,5 +1,5 @@
 import {Statement,ManipulativeStatement} from '../index';
-import {SelectQuery} from '../query/select';
+import {SelectQuery, JoinRef} from '../query/select';
 import {OrderBy} from '../query/orderby';
 import {Assignment} from '../query/update';
 
@@ -16,6 +16,7 @@ export class DeleteCursorQuery extends ManipulativeStatement {
 
 export class UpdateCursorQuery extends ManipulativeStatement {
 	table:TableRef;
+	joins:Array<JoinRef>;
 	assignments:Array<Assignment>;
 	cursor:string;
 }

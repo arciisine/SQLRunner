@@ -6,7 +6,6 @@ import {ScalarExpr} from '../common/scalar';
 
 export class Selection extends ASTNode {}
 export class AllSelection extends QuerySelection {}
-
 export class ScalarSelection extends QuerySelection {
 	columns:Array<ScalarExpr>;
 }
@@ -15,7 +14,7 @@ export class FromTableRef extends Ref {
 	
 }
 
-export enum JoinType extends ASTNode {
+export enum JoinType  {
 	LEFT, RIGHT, INNER, FULL
 }
 
@@ -37,18 +36,31 @@ export class FromClause extends ASTNode {
 	
 }
 
-export class SelectQuery extends Query {
+
+export enum BinaryQueryOperator {
+	UNION, INTERSECT, EXCEPT
+}
+
+class SelectQuery extends Query {}
+
+export class SingleSelectQuery extends SelectQuery {
 	distinct:boolean;
 	selection:QuerySelection;
 	from:Array<FromTableRef>;
-	join:Array<JoinRef>;
+	joins:Array<JoinRef>;
 	
 	where:SearchCondition;
 	groupBy:Array<ColumnRef>;
-	having:SearchCondition;
+	having:SearchCondition;	
 }
 
-export class SortableSelectQuery extends SelectQuery {
+export class BinarySelectQuery extends SelectQuery {
+	left:SelectQuery;
+	right:SelectQuery;
+	operator:BinaryQueryOperator;
+}
+
+export class SortableSelectQuery extends SingleSelectQuery {
 	orderBy:Array<OrderBy>;
 }
 

@@ -1,6 +1,7 @@
 import {ASTNode} from '../index';
 import {TableRef} from '../common/ref';
 import {NullableAtom} from '../common/literal';
+import {JoinRef} from './select';
 import {SearchCondition} from '../search-condition';
 
 export class Assignment extends ASTNode {
@@ -10,6 +11,7 @@ export class Assignment extends ASTNode {
 
 export class UpdateQuery extends ManipulativeStatement {
 	table:TableRef;
+	joins:Array<JoinRef>;
 	assignments:Array<Assignment>;
 	where:SearchCondition;
 }

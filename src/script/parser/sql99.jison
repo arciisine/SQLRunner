@@ -3,11 +3,6 @@
 %%
 "ALL"                                 return 'ALL';
 "AND"                                 return 'AND';
-"AVG"                                 return 'AVG';
-"MIN"                                 return 'MIN';
-"MAX"                                 return 'MAX';
-"SUM"                                 return 'SUM';
-"COUNT"                               return 'COUNT';
 "ANY"                                 return 'ANY';
 "AS"                                  return 'AS';
 "ASC"                                 return 'ASC';
@@ -30,6 +25,7 @@ CHAR(ACTER)?                          return 'CHARACTER';
 "DISTINCT"                            return 'DISTINCT';
 "DOUBLE"                              return 'DOUBLE';
 "ESCAPE"                              return 'ESCAPE';
+"EXCEPT"                              return 'EXCEPT';
 "EXISTS"                              return 'EXISTS';
 "FETCH"                               return 'FETCH';
 "FLOAT"                               return 'FLOAT';
@@ -47,6 +43,7 @@ GO[ \t]TO                             return 'GOTO';
 "INNER"                               return 'INNER';
 "INSERT"                              return 'INSERT';
 INT(EGER)?                            return 'INTEGER';
+"INTERSECTION"						  return 'INTERSECTION';
 "INTO"                                return 'INTO';
 "IS"                                  return 'IS';
 "JOIN"                                return 'JOIN';
@@ -95,7 +92,7 @@ INT(EGER)?                            return 'INTEGER';
 \d+|\.\d+|\d\.\d*                     return 'NUMBER_LITERAL';
 \d+[eE][+-]?\d+|\d\.\d*[eE][+-]?\d+|\.\d*[eE][+-]?\d+ return 'SCIENTIFIC_NUMBER_LITERAL';
 
-[A-Za-z][A-Za-z0-9_.]*                {
+[A-Za-z][A-Za-z0-9_]*                {
 	if (yytext.match(/^(ABS|AVG|MIN|MAX|SUM|COUNT|FLOOR|LOWER|UPPER)$/i)) {
 		return 'BUILTIN_FUNCTION';
 	} else {
@@ -105,7 +102,7 @@ INT(EGER)?                            return 'INTEGER';
 
 "--.*"                                return 'COMMENT';
 
-:[A-Za-z][A-Za-z0-9_]*				  return PARAMETER;
+:[A-Za-z][A-Za-z0-9_]*				  return 'PARAMETER';
 
 '"'                                   return 'DOUBLE_QUOTE';
 "%"                                   return 'PERCENT';
@@ -144,6 +141,7 @@ INT(EGER)?                            return 'INTEGER';
 %left EQUAL NOT_EQUAL LESS_THAN GREATER_THAN LESS_THAN_OR_EQUAL GREATER_THAN_OR_EQUAL
 %left PLUS MINUS
 %left ASTERISK DIVIDE
+%left UNION INTERSECTION EXCEPT
 %nonassoc UMINUS
 
 %start program
@@ -241,7 +239,6 @@ comparison:
 
 comparison_predicate:
 		scalar_exp comparison scalar_exp
-	|	scalar_exp comparison subquery
 	;
 
 between_predicate:
@@ -264,11 +261,14 @@ test_for_null:
 	|	column_ref IS NULLX
 	;
 
+opt_not:
+		/* empty */
+	|	NOT
+	;
+
 in_predicate:
-		scalar_exp NOT IN LEFT_PAREN subquery RIGHT_PAREN
-	|	scalar_exp IN LEFT_PAREN subquery RIGHT_PAREN
-	|	scalar_exp NOT IN LEFT_PAREN atom_commalist RIGHT_PAREN
-	|	scalar_exp IN LEFT_PAREN atom_commalist RIGHT_PAREN
+		scalar_exp opt_not IN subquery
+	|	scalar_exp opt_not IN LEFT_PAREN atom_commalist RIGHT_PAREN
 	;
 
 atom_commalist:
@@ -291,7 +291,8 @@ existence_test:
 	;
 
 subquery:
-		LEFT_PAREN select_inner_statement RIGHT_PAREN
+		LEFT_PAREN select_statement RIGHT_PAREN
+	|	LEFT_PAREN subquery RIGHT_PAREN
 	;
 
 	/* scalar expressions */
@@ -306,6 +307,7 @@ scalar_exp:
 	|	atom
 	|	column_ref
 	|	function_ref
+	|	LEFT_PAREN select_statement RIGHT_PAREN
 	|	LEFT_PAREN scalar_exp RIGHT_PAREN
 	;
 	
@@ -429,7 +431,7 @@ column_commalist:
 
 view_def:
 		CREATE VIEW table opt_column_commalist
-		AS select_inner_statement opt_with_check_option
+		AS select_statement opt_with_check_option
 	;
 
 opt_with_check_option:
@@ -489,7 +491,7 @@ stmt:
 
 
 cursor_def:
-		DECLARE cursor CURSOR FOR query_exp
+		DECLARE cursor CURSOR FOR select_expr_ordered
 	;
 
 	/* manipulative statements */
@@ -506,7 +508,8 @@ manipulative_statement:
 	|	insert_statement
 	|	open_statement
 	|	rollback_statement
-	|	select_statement
+	|	select_expr_ordered
+	|	select_into_statement
 	|	update_statement_positioned
 	|	update_statement_searched
 	;
@@ -538,7 +541,7 @@ insert_statement:
 
 values_or_query_spec:
 		VALUES LEFT_PAREN insert_atom_commalist RIGHT_PAREN
-	|	select_inner_statement
+	|	select_statement
 	;
 
 insert_atom_commalist:
@@ -560,24 +563,16 @@ rollback_statement:
 	|	ROLLBACK
 	;
 
-opt_into_clause:
+select_into_statement:
+    SELECT opt_all_distinct selection
     INTO target_commalist
-    | ;
+    table_exp
+	opt_order_by_clause
+    ;
 
 select_statement:
     SELECT opt_all_distinct selection
-    opt_into_clause
     table_exp
-    ;
-
-select_read_only_statement:
-    SELECT opt_all_distinct selection
-    table_exp
-    ;
-
-select_inner_statement:
-    SELECT opt_all_distinct selection
-    table_exp_inner
     ;
 
 opt_all_distinct:
@@ -587,7 +582,7 @@ opt_all_distinct:
 	;
 
 update_statement_positioned:
-		UPDATE table SET assignment_commalist
+		UPDATE table opt_join_ref_list SET assignment_commalist
 		WHERE CURRENT OF cursor
 	;
 
@@ -602,7 +597,7 @@ assignment:
 	;
 
 update_statement_searched:
-		UPDATE table SET assignment_commalist opt_where_clause
+		UPDATE table opt_join_ref_list SET assignment_commalist opt_where_clause
 	;
 
 target_commalist:
@@ -621,16 +616,28 @@ opt_where_clause:
 
 	/* query expressions */
 
-query_exp:
-		query_term
-	|	query_exp UNION query_term
-	|	query_exp UNION ALL query_term
+select_expr_op:
+		UNION
+	|	UNION ALL
+	|	INTERSECTION
+	|	EXCEPT
 	;
 
-query_term:
-		select_read_only_statement
-	|	LEFT_PAREN query_exp RIGHT_PAREN
+select_expr_ordered:
+	select_expr opt_order_by_clause
 	;
+
+select_expr:
+		select_statement
+	|	select_expr select_expr_op select_term
+	| 	LEFT_PAREN select_expr RIGHT_PAREN
+	;
+
+select_term:
+		select_statement
+	| 	LEFT_PAREN select_term RIGHT_PAREN
+	;
+
 
 selection:
 		selection_commalist
@@ -638,11 +645,6 @@ selection:
 	;
 
 table_exp:
-		table_exp_inner
-		opt_order_by_clause
-	;
-	
-table_exp_inner:
 		from_clause
 		opt_where_clause
 		opt_group_by_clause
@@ -690,23 +692,20 @@ dynamic_table_ref_commalist:
 	|	dynamic_table_ref_commalist COMMA dynamic_table_ref
 	;
 	
-opt_as:
+opt_alias:
 		/* empty */
-	| AS
-	;
-	
-opt_range:
-		/* empty */
+	|	AS range_variable
 	|	range_variable
 	;
 
 table_ref:
-		table opt_as opt_range
+		table opt_alias
 	;
 
 dynamic_table_ref:
 		table_ref
-	|   LEFT_PAREN select_inner_statement RIGHT_PAREN opt_as opt_range;
+	|   subquery opt_alias
+	;
 
 
 where_clause:
@@ -718,9 +717,14 @@ opt_group_by_clause:
 	|	GROUP BY column_ref_commalist
 	;
 
-column_ref_commalist:
+column_ref_spec:
 		column_ref
-	|	column_ref_commalist COMMA column_ref
+	|	NUMBER_LITERAL
+	;
+
+column_ref_commalist:
+		column_ref_spec
+	|	column_ref_commalist COMMA column_ref_spec
 	;
 
 opt_having_clause:

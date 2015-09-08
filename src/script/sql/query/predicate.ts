@@ -17,11 +17,6 @@ export class ComparisonPredicate extends Predicate {
 	comparison:ComparisonExprOperator;
 }
 
-export class QueryComparisonPredicate extends Predicate {
-	left:ScalarExpr;
-	right:SelectQuery;
-}
-
 export class BetweenPredicate extends Predicate {
 	source:ScalarExpr;
 	lower:ScalarExpr;

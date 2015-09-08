@@ -1,5 +1,6 @@
 import {Atom} from '../common/literal';
 import {ColumnRef} from '../common/ref';
+import {SelectQuery} from '../query/select';
 
 export enum BinaryExprOperator {
 	PLUS, MINUS, ASTERISK, DIVIDE;
@@ -33,6 +34,10 @@ export class ColumnRefExpr extends ScalarExpr {
 
 export class FunctionRefExpr extends ScalarExpr {
 	name:string;
+}
+
+export class QueryExpr extends ScalarExpr {
+	query:SelectQuery;
 }
 
 export class FunctionRefWithScalarExpr extends FunctionRefExpr {
