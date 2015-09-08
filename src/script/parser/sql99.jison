@@ -37,19 +37,23 @@ CHAR(ACTER)?                          return 'CHARACTER';
 "FOREIGN"                             return 'FOREIGN';
 "FOUND"                               return 'FOUND';
 "FROM"                                return 'FROM';
+"FULL"                                return 'FULL';
 GO[ \t]TO                             return 'GOTO';
 "GRANT"                               return 'GRANT';
 "GROUP"                               return 'GROUP';
 "HAVING"                              return 'HAVING';
 "IN"                                  return 'IN';
 "INDICATOR"                           return 'INDICATOR';
+"INNER"                               return 'INNER';
 "INSERT"                              return 'INSERT';
 INT(EGER)?                            return 'INTEGER';
 "INTO"                                return 'INTO';
 "IS"                                  return 'IS';
+"JOIN"                                return 'JOIN';
 "KEY"                                 return 'KEY';
 "LANGUAGE"                            return 'LANGUAGE';
 "LIKE"                                return 'LIKE';
+"LEFT"                                return 'LEFT';
 "NOT"                                 return 'NOT';
 "NULL"                                return 'NULLX';
 "NUMERIC"                             return 'NUMERIC';
@@ -59,6 +63,7 @@ INT(EGER)?                            return 'INTEGER';
 "OPTION"                              return 'OPTION';
 "OR"                                  return 'OR';
 "ORDER"                               return 'ORDER';
+"OUTER"                               return 'OUTER';
 "PRECISION"                           return 'PRECISION';
 "PRIMARY"                             return 'PRIMARY';
 "PRIVILEGES"                          return 'PRIVILEGES';
@@ -66,6 +71,7 @@ INT(EGER)?                            return 'INTEGER';
 "PUBLIC"                              return 'PUBLIC';
 "REAL"                                return 'REAL';
 "REFERENCES"                          return 'REFERENCES';
+"RIGHT"                               return 'RIGHT';
 "ROLLBACK"                            return 'ROLLBACK';
 "SCHEMA"                              return 'SCHEMA';
 "SELECT"                              return 'SELECT';
@@ -89,7 +95,14 @@ INT(EGER)?                            return 'INTEGER';
 \d+|\.\d+|\d\.\d*                     return 'NUMBER_LITERAL';
 \d+[eE][+-]?\d+|\d\.\d*[eE][+-]?\d+|\.\d*[eE][+-]?\d+ return 'SCIENTIFIC_NUMBER_LITERAL';
 
-[A-Za-z][A-Za-z0-9_.]*                return 'IDENTIFIER';
+[A-Za-z][A-Za-z0-9_.]*                {
+	if (yytext.match(/^(ABS|AVG|MIN|MAX|SUM|COUNT|FLOOR|LOWER|UPPER)$/i)) {
+		return 'BUILTIN_FUNCTION';
+	} else {
+		return 'IDENTIFIER';
+	}
+}
+
 "--.*"                                return 'COMMENT';
 
 :[A-Za-z][A-Za-z0-9_]*				  return PARAMETER;
@@ -125,9 +138,6 @@ INT(EGER)?                            return 'INTEGER';
 
 /lex
 
-%{
-}%
-
 %left OR
 %left AND
 %left NOT
@@ -138,17 +148,20 @@ INT(EGER)?                            return 'INTEGER';
 
 %start program
 
+%{
+	console.log("Starting");
+%}
 
 %%
 
-program: sql_list
+program: stmt_list
     ;
 
-sql_list:
-		sql SEMICOLON
-    |   sql SEMICOLON EOF
-    |   sql     EOF
-	|	sql_list sql SEMICOLON
+stmt_list:
+		stmt SEMICOLON
+    |   stmt SEMICOLON EOF
+    |   stmt     EOF
+	|	stmt_list stmt SEMICOLON
 	;
 
 
@@ -173,6 +186,9 @@ range_variable:	IDENTIFIER
 	;
 
 userName:		IDENTIFIER
+	;
+	
+alias:		IDENTIFIER
 	;
 
 		/* data types */
@@ -292,12 +308,16 @@ scalar_exp:
 	|	function_ref
 	|	LEFT_PAREN scalar_exp RIGHT_PAREN
 	;
-
-scalar_exp_commalist:
+	
+selection_scalar:
 		scalar_exp
-	|   scalar_exp AS alias
-	|	scalar_exp_commalist COMMA scalar_exp
-	|	scalar_exp_commalist COMMA scalar_exp AS alias
+	|	scalar_exp alias
+	|	scalar_exp AS alias
+	;
+
+selection_commalist:
+		selection_scalar
+	|	selection_commalist COMMA selection_scalar
 	;
 
 atom:
@@ -312,20 +332,11 @@ parameter_ref:
 	|	parameter INDICATOR parameter
 	;
 
-builtin_fn:
-        ABS
-    |   AVG
-    |   MIN
-    |   MAX
-    |   SUM
-    |   COUNT
-    ;
-
 function_ref:
-		builtin_fn LEFT_PAREN ASTERISK RIGHT_PAREN
-	|	builtin_fn LEFT_PAREN DISTINCT column_ref RIGHT_PAREN
-	|	builtin_fn LEFT_PAREN ALL scalar_exp RIGHT_PAREN
-	|	builtin_fn LEFT_PAREN scalar_exp RIGHT_PAREN
+		BUILTIN_FUNCTION LEFT_PAREN ASTERISK RIGHT_PAREN
+	|	BUILTIN_FUNCTION LEFT_PAREN DISTINCT column_ref RIGHT_PAREN
+	|	BUILTIN_FUNCTION LEFT_PAREN ALL scalar_exp RIGHT_PAREN
+	|	BUILTIN_FUNCTION LEFT_PAREN scalar_exp RIGHT_PAREN
 	;
 
 
@@ -343,7 +354,7 @@ column_ref:
 	;
 
 	/* schema definition language */
-sql:		schema
+stmt:		schema
 	;
 
 schema:
@@ -472,7 +483,7 @@ grantee:
 	;
 
 	/* cursor definition */
-sql:
+stmt:
 		cursor_def
 	;
 
@@ -483,7 +494,7 @@ cursor_def:
 
 	/* manipulative statements */
 
-sql:		manipulative_statement
+stmt:		manipulative_statement
 	;
 
 manipulative_statement:
@@ -510,11 +521,11 @@ commit_statement:
 	;
 
 delete_statement_positioned:
-		DELETE FROM table WHERE CURRENT OF cursor
+		DELETE FROM table_ref opt_join_ref_list WHERE CURRENT OF cursor
 	;
 
 delete_statement_searched:
-		DELETE FROM table opt_where_clause
+		DELETE FROM table_ref opt_join_ref_list opt_where_clause
 	;
 
 fetch_statement:
@@ -622,15 +633,12 @@ query_term:
 	;
 
 selection:
-		scalar_exp_commalist
+		selection_commalist
 	|	ASTERISK
 	;
 
 table_exp:
-		from_clause
-		opt_where_clause
-		opt_group_by_clause
-		opt_having_clause
+		table_exp_inner
 		opt_order_by_clause
 	;
 	
@@ -642,18 +650,64 @@ table_exp_inner:
 	;
 
 from_clause:
-		FROM table_ref_commalist
+		FROM dynamic_table_ref_commalist
+		opt_join_ref_list
 	;
 
-table_ref_commalist:
-		table_ref
-	|	table_ref_commalist COMMA table_ref
+opt_join_outer:
+		/* empty */
+	|	OUTER
+	;
+
+join_type:
+		LEFT opt_join_outer
+	|	RIGHT opt_join_outer
+	|	FULL opt_join_outer
+	|	INNER						
+	;
+	
+opt_join_on_clause:
+		/* empty */
+	|	ON search_condition
+	;
+
+join_ref:
+	join_type JOIN dynamic_table_ref opt_join_on_clause
+	;
+
+join_ref_list:
+		join_ref
+	|	join_ref_list join_ref
+	;
+	
+opt_join_ref_list:
+		/* empty */
+	|	join_ref_list
+	;
+	
+dynamic_table_ref_commalist:
+		dynamic_table_ref
+	|	dynamic_table_ref_commalist COMMA dynamic_table_ref
+	;
+	
+opt_as:
+		/* empty */
+	| AS
+	;
+	
+opt_range:
+		/* empty */
+	|	range_variable
 	;
 
 table_ref:
-		table
-	|	table range_variable
+		table opt_as opt_range
 	;
+
+dynamic_table_ref:
+		table_ref
+	|   LEFT_PAREN select_inner_statement RIGHT_PAREN opt_as opt_range;
+
 
 where_clause:
 		WHERE search_condition
@@ -696,7 +750,7 @@ opt_asc_desc:
 	;
 
 	/* embedded condition things */
-sql:		
+stmt:		
 		WHENEVER NOT FOUND when_action
 	|	WHENEVER SQLERROR when_action
 	;
