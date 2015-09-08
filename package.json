@@ -1,0 +1,24 @@
+{
+  "name": "SQLRunner",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "gulp": "^3.9.0",
+    "gulp-cached": "^1.1.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-jison": "^1.2.0",
+    "gulp-remember": "^0.3.0",
+    "gulp-serve": "^1.0.0",
+    "gulp-sourcemaps": "^1.5.2",
+    "gulp-typescript": "^2.8.2",
+    "jison": "^0.4.15",
+    "through2": "^2.0.0",
+    "typescript": "^1.6.0-dev.20150908"
+  }
+}

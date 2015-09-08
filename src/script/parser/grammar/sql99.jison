@@ -100,7 +100,7 @@ INT(EGER)?                            return 'INTEGER';
 	}
 }
 
-"--.*"                                return 'COMMENT';
+"--.*"                                return 'COMMENTS';
 
 :[A-Za-z][A-Za-z0-9_]*				  return 'PARAMETER';
 
