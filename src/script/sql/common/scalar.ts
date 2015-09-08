@@ -1,13 +1,14 @@
+import {ASTNode} from '../index';
 import {Atom} from '../common/literal';
 import {ColumnRef} from '../common/ref';
 import {SelectQuery} from '../query/select';
 
 export enum BinaryExprOperator {
-	PLUS, MINUS, ASTERISK, DIVIDE;
+	PLUS, MINUS, ASTERISK, DIVIDE
 }
 
 export enum UnaryExprOperator {
-	PLUS, MINUS;
+	PLUS, MINUS
 }
 
 export enum ComparisonExprOperator {

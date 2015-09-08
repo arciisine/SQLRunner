@@ -147,7 +147,8 @@ INT(EGER)?                            return 'INTEGER';
 %start program
 
 %{
-	console.log("Starting");
+import {Atom} from '../sql/common/literal';
+import {ParameterRef} from '../sql/common/ref';
 %}
 
 %%
@@ -331,7 +332,13 @@ atom:
 parameter_ref:
 		parameter
 	|	parameter parameter
-	|	parameter INDICATOR parameter
+	|	parameter INDICATOR parameter		
+	%{
+		let ref = new ParameterRef();
+		ref.name = $1;
+		ref.indicator = $3 || $2;
+		return ref;
+	}%
 	;
 
 function_ref:

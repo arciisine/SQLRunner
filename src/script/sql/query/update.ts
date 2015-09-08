@@ -1,8 +1,8 @@
-import {ASTNode} from '../index';
+import {ASTNode, ManipulativeStatement} from '../index';
 import {TableRef} from '../common/ref';
 import {NullableAtom} from '../common/literal';
 import {JoinRef} from './select';
-import {SearchCondition} from '../search-condition';
+import {SearchCondition} from './search-condition';
 
 export class Assignment extends ASTNode {
 	column:string;

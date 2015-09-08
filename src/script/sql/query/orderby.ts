@@ -1,4 +1,5 @@
-import {ASTNode, ColumnRef} from '../index';
+import {ASTNode} from '../index';
+import {ColumnRef} from '../common/ref';
 
 enum OrderByDirection {
 	ASC, DESC

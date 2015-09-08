@@ -1,10 +1,11 @@
 import {ASTNode} from '../index';
+import {TableRef} from '../common/ref';
 
-export enum BasicQueryGrantOperation {
+export enum BasicQueryGrantOperationType {
 	SELECT, INSERT, DELETE
 }
 
-export enum ComplexQueryGrantOperation {
+export enum ComplexQueryGrantOperationType {
 	UPDATE, REFERENCES
 }
 
@@ -20,17 +21,17 @@ export class UserGrantee extends Grantee {
 export class AllGrantOperation extends GrantOperation {}
 
 export class BasicQueryGrantOperation extends GrantOperation {
-	type:BasicQueryOperation;
+	type:BasicQueryGrantOperationType;
 }
 
 export class ComplexQueryGrantOperation extends GrantOperation {
-	type:ComplexQueryGrantOperation;
+	type:ComplexQueryGrantOperationType;
 	columns:Array<string>;
 }
 
 export class PrivilegeSchema extends ASTNode {
 	table:TableRef;
-	grantees:List<Grantee>;
-	operations:List<GrantOperation>;
+	grantees:Array<Grantee>;
+	operations:Array<GrantOperation>;
 	withGrant:boolean;
 }

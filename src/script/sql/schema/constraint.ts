@@ -5,7 +5,7 @@ import {SearchCondition} from '../query/search-condition';
 export class Constraint extends ASTNode {}
 export class TableConstraint extends Constraint {}
 
-export class ForeignKeyConstaint extends Constraint {
+export class ForeignKeyConstraint extends Constraint {
 	table:TableRef;
 	columns:Array<string>;
 }

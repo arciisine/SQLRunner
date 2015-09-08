@@ -3,11 +3,11 @@ import {ASTNode, Statement} from '../index';
 import {TableRef} from '../common/ref'; 
 import {NullableLiteral} from '../common/literal'
 
-import {SelectQuery} form '../query/index';
+import {SelectQuery} from '../query/select';
 import {SearchCondition} from '../query/search-condition';
 
 import {ColumnType} from './column-type';
-import {TableConstraint} from './constraint';
+import {ForeignKeyConstraint,TableConstraint} from './constraint';
 
 export class Schema extends ASTNode {}
 

@@ -1,10 +1,11 @@
 import {ASTNode} from '../index';
 import {Query} from './index';
+import {OrderBy} from './orderby';
 import {SearchCondition} from './search-condition';
 import {Ref, ColumnRef, TableRef, ParameterRef} from '../common/ref';
 import {ScalarExpr} from '../common/scalar';
 
-export class Selection extends ASTNode {}
+export class QuerySelection extends ASTNode {}
 export class AllSelection extends QuerySelection {}
 export class ScalarSelection extends QuerySelection {
 	columns:Array<ScalarExpr>;
@@ -41,7 +42,7 @@ export enum BinaryQueryOperator {
 	UNION, INTERSECT, EXCEPT
 }
 
-class SelectQuery extends Query {}
+export class SelectQuery extends Query {}
 
 export class SingleSelectQuery extends SelectQuery {
 	distinct:boolean;
