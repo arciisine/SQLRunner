@@ -5,7 +5,7 @@ import {ColumnRef} from '../common/ref';
 import {SearchCondition} from './search-condition'
 import {SelectQuery} from './select';
 
-export enum QueryComparisonOperator {
+export const enum QueryComparisonOperator {
 	ANY, ALL, SOME
 }
 

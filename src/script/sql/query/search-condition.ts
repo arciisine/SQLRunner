@@ -2,7 +2,7 @@ import {ASTNode} from '../index';
 
 export class SearchCondition extends ASTNode {}
 
-export enum SearchConditionOperator {
+export const enum SearchConditionOperator {
 	AND, OR
 }
 

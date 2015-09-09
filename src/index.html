@@ -7,13 +7,12 @@
 			System.config({
 				baseURL: 'dist/script/'
   			});
-		</script>
-		<script src="node_modules/sql.js/js/sql.js"></script>
-		<script src="node_modules/zip.js/WebContent/zip.js"></script>
-		<script>
-			zip.workerScriptsPath = "node_modules/zip.js/WebContent/";
-		</script>
-		<script>
+			System.config({
+				map : {
+					sqljs : 'node_modules/sql.js/js/sql.js',
+					zipjs : 'node_modules/zip.js/WebContent/zip.js'		
+				}
+			});
 			System.import('app.js').then(function(start) {
 				start.app();
 			});

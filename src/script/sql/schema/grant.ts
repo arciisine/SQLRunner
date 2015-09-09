@@ -2,11 +2,11 @@ import {ASTNode} from '../index';
 import {TableRef} from '../common/ref';
 import {CreateSchema} from './create';
 
-export enum BasicQueryGrantOperationType {
+export const enum BasicQueryGrantOperationType {
 	SELECT, INSERT, DELETE
 }
 
-export enum ComplexQueryGrantOperationType {
+export const enum ComplexQueryGrantOperationType {
 	UPDATE, REFERENCES
 }
 

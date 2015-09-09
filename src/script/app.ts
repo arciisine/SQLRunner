@@ -1,4 +1,6 @@
 import {parser} from './sql/grammar/sql99';
+//import {sqljs} from 'sqljs';
+//import {zipjs} from 'zipjs';
 
 let sqlParser = new parser.Parser();
 

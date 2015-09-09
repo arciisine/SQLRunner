@@ -28,7 +28,7 @@ export class FromTableRef extends Ref {
 	}
 }
 
-export enum JoinType  {
+export const enum JoinType  {
 	LEFT, RIGHT, INNER, FULL
 }
 
@@ -60,7 +60,7 @@ export class QueryFromTableRef extends FromTableRef {
 	}
 }
 
-export enum BinaryQueryOperator {
+export const enum BinaryQueryOperator {
 	UNION, INTERSECTION, EXCEPT
 }
 

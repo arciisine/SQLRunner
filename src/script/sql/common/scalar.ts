@@ -3,15 +3,15 @@ import {Atom} from '../common/literal';
 import {NamedColumnRef} from '../common/ref';
 import {SelectQuery} from '../query/select';
 
-export enum BinaryExprOperator {
+export const enum BinaryExprOperator {
 	PLUS, MINUS, MULTIPLY, DIVIDE
 }
 
-export enum UnaryExprOperator {
+export const enum UnaryExprOperator {
 	PLUS, MINUS
 }
 
-export enum ComparisonExprOperator {
+export const enum ComparisonExprOperator {
 	EQUAL, NOT_EQUAL, 
 	LESS_THAN, GREATER_THAN,
 	LESS_THAN_EQUAL, GREATER_THAN_EQUAL 

@@ -1,7 +1,7 @@
 import {ASTNode} from '../index';
 import {ColumnRef} from '../common/ref';
 
-export enum OrderByDirection {
+export const enum OrderByDirection {
 	ASC, DESC
 }
 
