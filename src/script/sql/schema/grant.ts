@@ -1,5 +1,6 @@
 import {ASTNode} from '../index';
 import {TableRef} from '../common/ref';
+import {CreateSchema} from './create';
 
 export enum BasicQueryGrantOperationType {
 	SELECT, INSERT, DELETE
@@ -41,12 +42,12 @@ export class ComplexQueryGrantOperation extends GrantOperation {
 	}
 }
 
-export class PrivilegeSchema extends ASTNode {
+export class PrivilegeSchema extends CreateSchema {
 	constructor (
+		public operations:Array<GrantOperation>,
 		public table:TableRef,
 		public grantees:Array<Grantee>,
-		public operations:Array<GrantOperation>,
-		public withGrant:boolean
+		public withGrant:boolean = false
 	) {
 		super();
 	}

@@ -30,6 +30,7 @@ CHAR(ACTER)?                          return 'CHARACTER';
 "DESC"                                return 'DESC';
 "DISTINCT"                            return 'DISTINCT';
 "DOUBLE"                              return 'DOUBLE';
+"DROP" 	                              return 'DROP';
 "ESCAPE"                              return 'ESCAPE';
 "EXCEPT"                              return 'EXCEPT';
 "EXISTS"                              return 'EXISTS';
@@ -140,7 +141,7 @@ INT(EGER)?                            return 'INTEGER';
 "<="                                  return 'LESS_THAN_OR_EQUAL';
 ">="                                  return 'GREATER_THAN_OR_EQUAL';
 
-[ \r\t]+                              /* Skip */;
+[ \r\t\n]+                              /* Skip */;
 
 <<EOF>>                               return 'EOF';
 
@@ -167,6 +168,7 @@ import * as columnType from '../schema/column-type';
 import * as grant from '../schema/grant';
 import * as constraint from '../schema/constraint';
 import * as create from '../schema/create';
+import * as drop from '../schema/drop';
 import * as cond from '../query/search-condition';
 import * as pred from '../query/predicate';
 import * as select from '../query/select';
@@ -192,13 +194,22 @@ opt_eof:
 	;
 
 program: 
-	stmt_list opt_semicolon opt_eof
+	stmt_list opt_semicolon opt_eof		{ return $1; }
    	;
 
 stmt_list:
-    	stmt 							{ $$ = [$1] }
+    	stmt 							{ $$ = [$1]; }
 	|	stmt_list SEMICOLON stmt 		{ $$ = $1; $$ = $$.concat([$3]); }	
 	;
+
+stmt:
+		schema_stmt
+	|	cursor_stmt
+	|	manipulative_stmt
+	|	when_stmt	
+	;
+
+
 
 string_literal:
 		STRING_LITERAL 					{ $$ = new literal.StringLiteral($1); }
@@ -263,7 +274,7 @@ opt_timezone:
 
 data_type:
 		CHARACTER opt_varying opt_size							{ $$ = new columnType.CharacterColumnType($3, !!$2) }
-	|	VARCHARACTER  opt_size									{ $$ = new columnType.CharacterColumnType($2, true) }
+	|	VARCHAR  opt_size										{ $$ = new columnType.CharacterColumnType($2, true) }
 	|	BINARY opt_varying opt_size								{ $$ = new columnType.BinaryColumnType($3, !!$2) }
 	|	VARBINARY  opt_size										{ $$ = new columnType.BinaryColumnType($2, true) }
 	|	NUMERIC	opt_size_and_precision							{ $$ = new columnType.NumericColumnType($2 && $2[0], $2 && $2[1]); }
@@ -324,7 +335,7 @@ any_all_some:
 predicate:
 		scalar_exp comparison scalar_exp							{ $$ = new pred.ComparisonPredicate($1, $2, $3); }
 	|	scalar_exp opt_not BETWEEN scalar_exp AND scalar_exp 		{ $$ = new pred.BetweenPredicate($1, $4, $5, !!$2); }
-	|	scalar_exp opt_not LIKE string_literal opt_escape 			{ $$ = new pred.LikePredicate($1, $3, $4, !!$2); }
+	|	scalar_exp opt_not LIKE string_literal opt_escape 			{ $$ = new pred.LikePredicate($1, $4, $5, !!$2); }
 	|	named_column_ref IS opt_not NULLX							{ $$ = new pred.NullCheckPredicate($1, !!$3); }
 	|	scalar_exp opt_not IN subquery								{ $$ = new pred.InQueryPredicate($1, $4, !!$2); }	
 	|	scalar_exp opt_not IN '(' atom_commalist ')'				 { $$ = new pred.InArrayPredicate($1, $5, !!$2); }
@@ -379,7 +390,7 @@ function_ref:
 		BUILTIN_FUNCTION '(' ASTERISK ')'					{ $$ = new scalar.FunctionRefWithAllColumnExpr($1); }
 	|	BUILTIN_FUNCTION '(' DISTINCT named_column_ref ')'	{ $$ = new scalar.FunctionRefWithDistinctColumnExpr($1, $4);  }
 	|	BUILTIN_FUNCTION '(' ALL scalar_exp ')'				{ $$ = new scalar.FunctionRefWithScalarExpr($1, $4, true); }
-	|	BUILTIN_FUNCTION '(' scalar_exp ')'					{ $$ = new scalar.FunctionRefWithScalarExpr($1, $4); }
+	|	BUILTIN_FUNCTION '(' scalar_exp ')'					{ $$ = new scalar.FunctionRefWithScalarExpr($1, $3); }
 	;
 
 
@@ -392,8 +403,8 @@ table:
 
 named_column_ref:
 		IDENTIFIER										{ $$ = new ref.NamedColumnRef($1); } 						
-	|	IDENTIFIER PERIOD IDENTIFIER					{ $$ = new ref.NamedColumnRef($2, $1); }
-	|	IDENTIFIER PERIOD IDENTIFIER PERIOD IDENTIFIER  { $$ = new ref.NamedColumnRef($3, $2, $1); }
+	|	IDENTIFIER PERIOD IDENTIFIER					{ $$ = new ref.NamedColumnRef($3, $1); }
+	|	IDENTIFIER PERIOD IDENTIFIER PERIOD IDENTIFIER  { $$ = new ref.NamedColumnRef($5, $3, $1); }
 	;
 
 
@@ -403,39 +414,43 @@ column_ref_spec:
 	;
 
 	/* schema definition language */
-stmt:		schema
+schema_stmt:
+		schema_authorize
+	|	schema_create_element
+	|	schema_drop_element 
 	;
 
-schema:
-		CREATE SCHEMA AUTHORIZATION userName opt_schema_element_list
+schema_authorize:
+		CREATE SCHEMA table_ref AUTHORIZATION userName schema_create_element_list 
+		{ $$ = new create.AuthorizationSchema($3, $5, $6); }
 	;
 
-opt_schema_element_list:
-		/* empty */
-	|	schema_element_list
+schema_create_element_list:
+		schema_create_element								{ $$ = [$1]; }
+	|	schema_create_element_list schema_create_element	{ $$ = $1; $$ = $$.concat([$2]); }
+	;	
+
+schema_create_element:
+		schema_table
+	|	schema_view
+	|	schema_privilege
+	;
+	
+schema_drop_element:
+		drop_table
+	|	drop_view 
+	;
+	
+schema_table:
+		CREATE TABLE table '(' table_element_commalist ')'	{ $$ = new create.TableSchema($3, $5); }
 	;
 
-schema_element_list:
-		schema_element								{ $$ = [$1]; }
-	|	schema_element_list schema_element			{ $$ = $1; $$ = $$.concat([$2]); }
+table_element_commalist:
+		table_element										{ $$ = [$1]; }		
+	|	table_element_commalist ',' table_element			{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
-schema_element:
-		base_table_def
-	|	view_def
-	|	privilege_def
-	;
-
-base_table_def:
-		CREATE TABLE table '(' base_table_element_commalist ')'	{ $$ = new create.TableSchema($3, $5); }
-	;
-
-base_table_element_commalist:
-		base_table_element										{ $$ = [$1]; }		
-	|	base_table_element_commalist ',' base_table_element		{ $$ = $1; $$ = $$.concat([$3]); }
-	;
-
-base_table_element:
+table_element:
 		column_def												{ $$ = $1; }
 	|	table_constraint_def									{ $$ = $1; }	
 	;
@@ -466,7 +481,9 @@ table_constraint_def:
 	|	PRIMARY KEY '(' column_commalist ')'					{ $$ = new constraint.PrimaryKeyTableConstraint($4); }
 	|	FOREIGN KEY '(' column_commalist ')' REFERENCES table	{ $$ = new constraint.ForeignKeyTableConstraint($4, $7); }
 	|	FOREIGN KEY '(' column_commalist ')' REFERENCES table '(' column_commalist ')'
-	{ $$ = new constraint.ForeignKeyTableConstraint($4, $7, $9); }
+	{ 
+		$$ = new constraint.ForeignKeyTableConstraint($4, $7, $9);
+	}
 	|	CHECK '(' search_condition ')'							{ $$ = new constraint.CheckTableConstraint($3); }
 	;
 
@@ -480,7 +497,7 @@ opt_column_commalist:
 	|	'(' column_commalist ')'			{ $$ = $2; }
 	;
 
-view_def:
+schema_view:
 		CREATE VIEW table opt_column_commalist AS select_statement opt_with_check_option
 		{
 			$$ = new create.ViewSchema($3, $4, $6, !!$7)
@@ -492,20 +509,31 @@ opt_with_check_option:
 	|	WITH CHECK OPTION								{ $$ = true; }
 	;
 
-privilege_def:
-		GRANT privileges ON table TO grantee_commalist
-		opt_with_grant_option
+schema_privilege:
+		GRANT privilege_item opt_with_grant_option { $$ = $2; $$.withGrant = !!$3 }
 	;
+	
+drop_privilege:
+		REVOKE privilege_item { $$ = new drop.DropPrivilegeSchema($2); } 
+	;	
+	
+privilege_item:
+	privileges ON table TO grantee_commalist	{ $$ = new grant.PrivilegeSchema($1, $3, $5); } 
+	;	
 
 opt_with_grant_option:
 		/* empty */
 	|	WITH GRANT OPTION								{ $$ = true; }	
 	;
 
+opt_privilege_token:
+		/* empty */
+	|	PRIVILEGES
+	;
+
 privileges:
-		ALL PRIVILEGES
-	|	ALL
-	|	operation_commalist
+		ALL opt_privilege_token							{ $$ = [new grant.AllGrantOperation()]; }	
+	|	operation_commalist								{ $$ = $1; }
 	;
 
 operation_commalist:
@@ -514,11 +542,16 @@ operation_commalist:
 	;
 
 operation:
-		SELECT
+		SELECT											
+		{ $$ = new grant.BasicQueryGrantOperation(grant.BasicQueryGrantOperationType.SELECT); }		
 	|	INSERT
+		{ $$ = new grant.BasicQueryGrantOperation(grant.BasicQueryGrantOperationType.INSERT); }
 	|	DELETE
+		{ $$ = new grant.BasicQueryGrantOperation(grant.BasicQueryGrantOperationType.DELETE); }
 	|	UPDATE opt_column_commalist
+		{ $$ = new grant.ComplexQueryGrantOperation(grant.ComplexQueryGrantOperationType.UPDATE, $2); }
 	|	REFERENCES opt_column_commalist
+		{ $$ = new grant.ComplexQueryGrantOperation(grant.ComplexQueryGrantOperationType.REFERENCES, $2); }
 	;
 
 
@@ -532,22 +565,27 @@ grantee:
 	|	userName										{ $$ = new grant.UserGrantee($1); }
 	;
 
+drop_table:
+	DROP TABLE table_ref 								{ $$ = new drop.DropTableSchema($1); }
+	;
+	
+drop_view:
+	DROP VIEW table_ref 								{ $$ = new drop.DropViewSchema($1); }
+	;	
+
 	/* cursor definition */
-stmt:
+cursor_stmt:
 		DECLARE cursor CURSOR FOR select_expr_ordered		{ $$ = new cursor.CursorDefinitionStatement($2, $5); }
 	;
 
 	/* manipulative statements */
-
-stmt:		manipulative_statement
-	;
 
 opt_work:
 		/** empty **/
 	|	WORK				{ $$ = true; }
 	;
 
-manipulative_statement:
+manipulative_stmt:
 		close_statement
 	|	commit_statement
 	|	delete_statement_positioned
@@ -765,7 +803,7 @@ opt_where_clause:
 
 opt_group_by_clause:
 		/* empty */
-	|	GROUP BY column_ref_spec_commalist						{ $$ = $2; }
+	|	GROUP BY column_ref_spec_commalist						{ $$ = $3; }
 	;
 
 column_ref_spec_commalist:
@@ -799,7 +837,7 @@ opt_asc_desc:
 	;
 
 	/* embedded condition things */
-stmt:		
+when_stmt:		
 		WHENEVER NOT FOUND when_action							{ $$ = new when.WheneverNotFound($4); }		
 	|	WHENEVER SQLERROR when_action							{ $$ = new when.WheneverSQLError($3); }
 	;

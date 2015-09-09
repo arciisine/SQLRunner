@@ -3,7 +3,23 @@ import {parser} from './sql/grammar/sql99';
 let sqlParser = new parser.Parser();
 
 export function app() {
-	let ret = sqlParser.parse("SELECT * FROM Users z WHERE z.name LIKE '%tom%' ");
+	let ret = sqlParser.parse(`
+		SELECT z.state, MAX(z.age) 
+		FROM Users z 
+		WHERE 
+			z.name LIKE '%tom%' 
+			AND z.age < 20 
+		GROUP BY z.state 
+		ORDER BY z.state;
+		
+		CREATE TABLE Users (
+			id INT PRIMARY KEY,
+			name VARCHAR(20) NOT NULL,
+			age FLOAT NOT NULL				
+		);
+	`);
+	
 	console.log(ret);
+	
 	return ret;
 }

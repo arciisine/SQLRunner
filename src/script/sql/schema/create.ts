@@ -34,7 +34,9 @@ export class ColumnSchema extends ASTNode {
 	}
 }
 
-export class TableSchema extends Schema {
+export class CreateSchema extends Schema {}
+
+export class TableSchema extends CreateSchema {
 	public columns:Array<ColumnSchema>;
 	public constraints:Array<TableConstraint>;
 
@@ -48,7 +50,7 @@ export class TableSchema extends Schema {
 	}
 }
 
-export class ViewSchema extends Schema {
+export class ViewSchema extends CreateSchema {
 	constructor(
 		public name:TableRef,
 		public columns:Array<string>,
@@ -59,10 +61,11 @@ export class ViewSchema extends Schema {
 	}
 }
 
-export class CreateSchemaStatement extends Statement {
+export class AuthorizationSchema extends Schema {
 	constructor(
+		public table:TableRef,
 		public user:string,
-		public schemas:Array<Schema>
+		public schemas:Array<CreateSchema>
 	) {
 		super();
 	}
