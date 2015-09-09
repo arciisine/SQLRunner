@@ -15,23 +15,39 @@ export class GrantOperation extends ASTNode {}
 export class PublicGrantee extends Grantee {}
 
 export class UserGrantee extends Grantee {
-	name:string;
+	constructor(
+		public name:string
+	) {
+		super()
+	}
 }
 
 export class AllGrantOperation extends GrantOperation {}
 
 export class BasicQueryGrantOperation extends GrantOperation {
-	type:BasicQueryGrantOperationType;
+	constructor(
+		public type:BasicQueryGrantOperationType
+	) {
+		super()
+	}
 }
 
 export class ComplexQueryGrantOperation extends GrantOperation {
-	type:ComplexQueryGrantOperationType;
-	columns:Array<string>;
+	constructor( 
+		public type:ComplexQueryGrantOperationType,
+		public columns:Array<string>
+	) {
+		super()
+	}
 }
 
 export class PrivilegeSchema extends ASTNode {
-	table:TableRef;
-	grantees:Array<Grantee>;
-	operations:Array<GrantOperation>;
-	withGrant:boolean;
+	constructor (
+		public table:TableRef,
+		public grantees:Array<Grantee>,
+		public operations:Array<GrantOperation>,
+		public withGrant:boolean
+	) {
+		super();
+	}
 }

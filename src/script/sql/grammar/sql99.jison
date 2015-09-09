@@ -119,11 +119,11 @@ INT(EGER)?                            return 'INTEGER';
 "%"                                   return 'PERCENT';
 "&"                                   return 'AMPERSAND';
 "'"                                   return 'QUOTE';
-"("                                   return 'LEFT_PAREN';
-")"                                   return 'RIGHT_PAREN';
+"("                                   return '(';
+")"                                   return ')';
 "."                                   return 'PERIOD';
 ":"                                   return 'COLON';
-","                                   return 'COMMA';
+","                                   return ',';
 ";"                                   return 'SEMICOLON';
 "|"                                   return 'VERTICAL_BAR';
 "?"                                   return 'QUESTION_MARK';
@@ -164,26 +164,44 @@ import * as literal from '../common/literal';
 import * as ref from '../common/ref';
 import * as scalar from '../common/scalar';
 import * as columnType from '../schema/column-type';
+import * as grant from '../schema/grant';
+import * as constraint from '../schema/constraint';
+import * as create from '../schema/create';
 import * as cond from '../query/search-condition';
 import * as pred from '../query/predicate';
 import * as select from '../query/select';
+import * as insert from '../query/insert';
+import * as update from '../query/update';
+import * as del from '../query/delete';
+import * as cursor from '../statement/cursor';
+import * as transaction from '../statement/transaction';
+import * as order from '../query/orderby';
+import * as when from '../statement/when';
 %}
 
 %%
 
-program: stmt_list
-    ;
-
-stmt_list:
-		stmt SEMICOLON
-    |   stmt SEMICOLON EOF
-    |   stmt     EOF
-	|	stmt_list stmt SEMICOLON
+opt_semicolon:
+		/** empty **/
+	|	SEMICOLON
+	;
+	
+opt_eof:
+		/** empty **/
+	|	EOF
 	;
 
+program: 
+	stmt_list opt_semicolon opt_eof
+   	;
+
+stmt_list:
+    	stmt 							{ $$ = [$1] }
+	|	stmt_list SEMICOLON stmt 		{ $$ = $1; $$ = $$.concat([$3]); }	
+	;
 
 string_literal:
-		STRING_LITERAL { $$ = new literal.StringLiteral($1); }
+		STRING_LITERAL 					{ $$ = new literal.StringLiteral($1); }
 	;
 	
 number_literal:
@@ -224,13 +242,13 @@ alias:		IDENTIFIER
 
 opt_size:
 		/* empty */
-	|	LEFT_PAREN number_literal RIGHT_PAREN 						{ $$ = $2.value }
+	|	'(' number_literal ')' 						{ $$ = $2.value }
 	;
 	
 opt_size_and_precision:
 		/* empty */
-	|	LEFT_PAREN number_literal RIGHT_PAREN 						{ $$ = [$2.value] }
-	| 	LEFT_PAREN number_literal COMMA number_literal RIGHT_PAREN 	{ $$ = [$2.value, $4.value] }
+	|	'(' number_literal ')' 						{ $$ = [$2.value] }
+	| 	'(' number_literal ',' number_literal ')' 	{ $$ = [$2.value, $4.value] }
 	;
 	
 opt_varying:
@@ -268,7 +286,7 @@ search_condition:
 	|	search_condition OR search_condition			{ $$ = new cond.BinarySearchCondition($1, cond.SearchConditionOperator.AND, $3) }
 	|	search_condition AND search_condition			{ $$ = new cond.BinarySearchCondition($1, cond.SearchConditionOperator.OR, $3) }
 	|	NOT search_condition							{ $$ = new cond.NotSearchCondition($2); }
-	|	LEFT_PAREN search_condition RIGHT_PAREN			{ $$ = $2; }
+	|	'(' search_condition ')'						{ $$ = $2; }
 	|	predicate										{ $$ = $1; }
 	;
 
@@ -284,7 +302,7 @@ opt_escape:
 
 atom_commalist:
 		atom						{ $$ = [$1]; }
-	|	atom_commalist COMMA atom	{ $$ = $1; $$ = $$.concat([$3]); }
+	|	atom_commalist ',' atom		{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
 comparison:
@@ -307,16 +325,16 @@ predicate:
 		scalar_exp comparison scalar_exp							{ $$ = new pred.ComparisonPredicate($1, $2, $3); }
 	|	scalar_exp opt_not BETWEEN scalar_exp AND scalar_exp 		{ $$ = new pred.BetweenPredicate($1, $4, $5, !!$2); }
 	|	scalar_exp opt_not LIKE string_literal opt_escape 			{ $$ = new pred.LikePredicate($1, $3, $4, !!$2); }
-	|	column_ref IS opt_not NULLX									{ $$ = new pred.NullCheckPredicate($1, !!$3); }
+	|	named_column_ref IS opt_not NULLX							{ $$ = new pred.NullCheckPredicate($1, !!$3); }
 	|	scalar_exp opt_not IN subquery								{ $$ = new pred.InQueryPredicate($1, $4, !!$2); }	
-	|	scalar_exp opt_not IN LEFT_PAREN atom_commalist RIGHT_PAREN { $$ = new pred.InArrayPredicate($1, $5, !!$2); }
+	|	scalar_exp opt_not IN '(' atom_commalist ')'				 { $$ = new pred.InArrayPredicate($1, $5, !!$2); }
 	|	scalar_exp comparison any_all_some subquery					{ $$ = new pred.QueryComparisonPredicate($1, $2, $3, $4); }
 	|	EXISTS subquery												{ $$ = new pred.ExistenceCheckPredicate($2); }
 	;
 
 subquery:
-		LEFT_PAREN select_statement RIGHT_PAREN						{ $$ = $2 }
-	|	LEFT_PAREN subquery RIGHT_PAREN								{ $$ = $2 }
+		'(' select_statement ')'						{ $$ = $2 }
+	|	'(' subquery ')'								{ $$ = $2 }
 	;
 
 	/* scalar expressions */
@@ -329,10 +347,10 @@ scalar_exp:
 	|	PLUS scalar_exp %prec UMINUS				{ $$ = new scalar.UnaryExpr($1, scalar.UnaryExprOperator.PLUS); }
 	|	MINUS scalar_exp %prec UMINUS				{ $$ = new scalar.UnaryExpr($1, scalar.UnaryExprOperator.MINUS); }
 	|	atom										{ $$ = new scalar.AtomExpr($1); }
-	|	column_ref									{ $$ = new scalar.ColumnRefExpr($1); }
+	|	named_column_ref							{ $$ = new scalar.NamedColumnRefExpr($1); }
 	|	function_ref								{ $$ = new scalar.FunctionRefExpr($1); }
-	|	LEFT_PAREN select_statement RIGHT_PAREN		{ $$ = new scalar.QueryExpr($1); }
-	|	LEFT_PAREN scalar_exp RIGHT_PAREN			{ $$ = $2; }
+	|	'(' select_statement ')'					{ $$ = new scalar.QueryExpr($1); }
+	|	'(' scalar_exp ')'							{ $$ = $2; }
 	;
 	
 selection_scalar:
@@ -343,13 +361,12 @@ selection_scalar:
 
 selection_commalist:
 		selection_scalar							{ $$ = [$1]; }
-	|	selection_commalist COMMA selection_scalar	{ $$ = $1; $$ = $$.concat([$3]); }
+	|	selection_commalist ',' selection_scalar	{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
 atom:
-		parameter_ref							
-	|	literal
-	|	USER
+		parameter_ref								{ $$ = $1; }
+	|	literal										{ $$ = $1; }
 	;
 
 parameter_ref:
@@ -359,10 +376,10 @@ parameter_ref:
 	;
 
 function_ref:
-		BUILTIN_FUNCTION LEFT_PAREN ASTERISK RIGHT_PAREN				{ $$ = new scalar.FunctionRefWithAllColumnExpr($1); }
-	|	BUILTIN_FUNCTION LEFT_PAREN DISTINCT column_ref RIGHT_PAREN		{ $$ = new scalar.FunctionRefWithDistinctColumnExpr($1, $4);  }
-	|	BUILTIN_FUNCTION LEFT_PAREN ALL scalar_exp RIGHT_PAREN			{ $$ = new scalar.FunctionRefWithScalarExpr($1, $4, true); }
-	|	BUILTIN_FUNCTION LEFT_PAREN scalar_exp RIGHT_PAREN				{ $$ = new scalar.FunctionRefWithScalarExpr($1, $4); }
+		BUILTIN_FUNCTION '(' ASTERISK ')'					{ $$ = new scalar.FunctionRefWithAllColumnExpr($1); }
+	|	BUILTIN_FUNCTION '(' DISTINCT named_column_ref ')'	{ $$ = new scalar.FunctionRefWithDistinctColumnExpr($1, $4);  }
+	|	BUILTIN_FUNCTION '(' ALL scalar_exp ')'				{ $$ = new scalar.FunctionRefWithScalarExpr($1, $4, true); }
+	|	BUILTIN_FUNCTION '(' scalar_exp ')'					{ $$ = new scalar.FunctionRefWithScalarExpr($1, $4); }
 	;
 
 
@@ -373,10 +390,16 @@ table:
 	|	IDENTIFIER PERIOD IDENTIFIER					{ $$ = new ref.TableRef($2, $1); }
 	;
 
-column_ref:
-		IDENTIFIER										{ $$ = new ref.ColumnRef($1); } 						
-	|	IDENTIFIER PERIOD IDENTIFIER					{ $$ = new ref.ColumnRef($2, $1); }
-	|	IDENTIFIER PERIOD IDENTIFIER PERIOD IDENTIFIER  { $$ = new ref.ColumnRef($3, $2, $1); }
+named_column_ref:
+		IDENTIFIER										{ $$ = new ref.NamedColumnRef($1); } 						
+	|	IDENTIFIER PERIOD IDENTIFIER					{ $$ = new ref.NamedColumnRef($2, $1); }
+	|	IDENTIFIER PERIOD IDENTIFIER PERIOD IDENTIFIER  { $$ = new ref.NamedColumnRef($3, $2, $1); }
+	;
+
+
+column_ref_spec:
+		named_column_ref								{ $$ = $1; }
+	|	number_literal									{ $$ = new ref.NumberColumnRef($1.value); }
 	;
 
 	/* schema definition language */
@@ -393,8 +416,8 @@ opt_schema_element_list:
 	;
 
 schema_element_list:
-		schema_element
-	|	schema_element_list schema_element
+		schema_element								{ $$ = [$1]; }
+	|	schema_element_list schema_element			{ $$ = $1; $$ = $$.concat([$2]); }
 	;
 
 schema_element:
@@ -404,68 +427,69 @@ schema_element:
 	;
 
 base_table_def:
-		CREATE TABLE table LEFT_PAREN base_table_element_commalist RIGHT_PAREN
+		CREATE TABLE table '(' base_table_element_commalist ')'	{ $$ = new create.TableSchema($3, $5); }
 	;
 
 base_table_element_commalist:
-		base_table_element
-	|	base_table_element_commalist COMMA base_table_element
+		base_table_element										{ $$ = [$1]; }		
+	|	base_table_element_commalist ',' base_table_element		{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
 base_table_element:
-		column_def
-	|	table_constraint_def
+		column_def												{ $$ = $1; }
+	|	table_constraint_def									{ $$ = $1; }	
 	;
 
 column_def:
-		column data_type column_def_opt_list
+		column data_type column_def_opt_list					{ $$ = new create.ColumnSchema($1, $2, $3); }
 	;
 
 column_def_opt_list:
-		/* empty */
-	|	column_def_opt_list column_def_opt
+		/* empty */												{ $$ = []; }
+	|	column_def_opt_list column_def_opt						{ $$ = $1; $$ = $$.concat([$2]); }
 	;
 
 column_def_opt:
-		NOT NULLX
-	|	NOT NULLX UNIQUE
-	|	NOT NULLX PRIMARY KEY
-	|	DEFAULT literal
-	|	DEFAULT NULLX
-	|	DEFAULT USER
-	|	CHECK LEFT_PAREN search_condition RIGHT_PAREN
-	|	REFERENCES table
-	|	REFERENCES table LEFT_PAREN column_commalist RIGHT_PAREN
+		NOT NULLX												{ $$ = new constraint.NotNullConstraint(); }
+	|	NULLX													{ $$ = new constraint.NullConstraint(); }
+	|	UNIQUE													{ $$ = new constraint.UniqueKeyConstraint(); }
+	|	PRIMARY KEY												{ $$ = new constraint.PrimaryKeyConstraint(); }
+	|	DEFAULT literal											{ $$ = new constraint.DefaultConstraint($1); }
+	|	DEFAULT NULLX											{ $$ = new constraint.DefaultNullConstraint(); }
+	|	CHECK '(' search_condition ')'							{ $$ = new constraint.CheckConstraint($3); }
+	|	REFERENCES table										{ $$ = new constraint.ForeignKeyConstraint($2); }	
+	|	REFERENCES table '(' column_commalist ')'				{ $$ = new constraint.ForeignKeyConstraint($2, $4); }
 	;
 
 table_constraint_def:
-		UNIQUE LEFT_PAREN column_commalist RIGHT_PAREN
-	|	PRIMARY KEY LEFT_PAREN column_commalist RIGHT_PAREN
-	|	FOREIGN KEY LEFT_PAREN column_commalist RIGHT_PAREN
-			REFERENCES table
-	|	FOREIGN KEY LEFT_PAREN column_commalist RIGHT_PAREN
-			REFERENCES table LEFT_PAREN column_commalist RIGHT_PAREN
-	|	CHECK LEFT_PAREN search_condition RIGHT_PAREN
+		UNIQUE '(' column_commalist ')'							{ $$ = new constraint.UniqueKeyTableConstraint($3); }
+	|	PRIMARY KEY '(' column_commalist ')'					{ $$ = new constraint.PrimaryKeyTableConstraint($4); }
+	|	FOREIGN KEY '(' column_commalist ')' REFERENCES table	{ $$ = new constraint.ForeignKeyTableConstraint($4, $7); }
+	|	FOREIGN KEY '(' column_commalist ')' REFERENCES table '(' column_commalist ')'
+	{ $$ = new constraint.ForeignKeyTableConstraint($4, $7, $9); }
+	|	CHECK '(' search_condition ')'							{ $$ = new constraint.CheckTableConstraint($3); }
 	;
 
 column_commalist:
-		column
-	|	column_commalist COMMA column
-	;
-
-view_def:
-		CREATE VIEW table opt_column_commalist
-		AS select_statement opt_with_check_option
-	;
-
-opt_with_check_option:
-		/* empty */
-	|	WITH CHECK OPTION
+		column								{ $$ = [$1] }
+	|	column_commalist ',' column			{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
 opt_column_commalist:
 		/* empty */
-	|	LEFT_PAREN column_commalist RIGHT_PAREN
+	|	'(' column_commalist ')'			{ $$ = $2; }
+	;
+
+view_def:
+		CREATE VIEW table opt_column_commalist AS select_statement opt_with_check_option
+		{
+			$$ = new create.ViewSchema($3, $4, $6, !!$7)
+		}
+	;
+
+opt_with_check_option:
+		/* empty */
+	|	WITH CHECK OPTION								{ $$ = true; }
 	;
 
 privilege_def:
@@ -475,7 +499,7 @@ privilege_def:
 
 opt_with_grant_option:
 		/* empty */
-	|	WITH GRANT OPTION
+	|	WITH GRANT OPTION								{ $$ = true; }	
 	;
 
 privileges:
@@ -485,8 +509,8 @@ privileges:
 	;
 
 operation_commalist:
-		operation
-	|	operation_commalist COMMA operation
+		operation										{ $$ = [$1]; }
+	|	operation_commalist ',' operation				{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
 operation:
@@ -499,28 +523,28 @@ operation:
 
 
 grantee_commalist:
-		grantee
-	|	grantee_commalist COMMA grantee
+		grantee											{ $$ = [$1]; }
+	|	grantee_commalist ',' grantee					{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
 grantee:
-		PUBLIC
-	|	userName
+		PUBLIC											{ $$ = new grant.PublicGrantee(); }		
+	|	userName										{ $$ = new grant.UserGrantee($1); }
 	;
 
 	/* cursor definition */
 stmt:
-		cursor_def
-	;
-
-
-cursor_def:
-		DECLARE cursor CURSOR FOR select_expr_ordered
+		DECLARE cursor CURSOR FOR select_expr_ordered		{ $$ = new cursor.CursorDefinitionStatement($2, $5); }
 	;
 
 	/* manipulative statements */
 
 stmt:		manipulative_statement
+	;
+
+opt_work:
+		/** empty **/
+	|	WORK				{ $$ = true; }
 	;
 
 manipulative_statement:
@@ -539,65 +563,51 @@ manipulative_statement:
 	;
 
 close_statement:
-		CLOSE cursor
+		CLOSE cursor													{ $$ = new cursor.CloseStatement($2); }
 	;
 
 commit_statement:
-		COMMIT WORK
-	|	COMMIT
+		COMMIT opt_work													{ $$ = new transaction.CommitStatement(); }
 	;
 
 delete_statement_positioned:
-		DELETE FROM table_ref opt_join_ref_list WHERE CURRENT OF cursor
+		DELETE FROM table_ref opt_join_ref_list WHERE CURRENT OF cursor	{ $$ = new cursor.DeleteCursorQuery($3, $4, $8); }
 	;
 
 delete_statement_searched:
-		DELETE FROM table_ref opt_join_ref_list opt_where_clause
+		DELETE FROM table_ref opt_join_ref_list opt_where_clause		{ $$ = new del.DeleteQuery($3, $4, $5); } 
 	;
 
 fetch_statement:
-		FETCH cursor INTO target_commalist
+		FETCH cursor INTO target_commalist								{ $$ = new cursor.FetchStatement($2, $4); }
 	;
 
 insert_statement:
-		INSERT INTO table opt_column_commalist values_or_query_spec
+		INSERT INTO table opt_column_commalist values_or_query_spec 	{ $$ = new insert.InsertQuery($3, $4, $5); }
 	;
 
 values_or_query_spec:
-		VALUES LEFT_PAREN insert_atom_commalist RIGHT_PAREN
-	|	select_statement
-	;
-
-insert_atom_commalist:
-		insert_atom
-	|	insert_atom_commalist COMMA insert_atom
+		VALUES '(' insert_atom_commalist ')'	 	{ $$ = new insert.AtomValues($3); }
+	|	select_statement							{ $$ = new insert.QueryValues($1); }
 	;
 
 insert_atom:
-		atom
-	|	NULLX
+		atom	
+	|	NULLX								
+	;
+
+insert_atom_commalist:
+		insert_atom										{ $$ = [$1]; }
+	|	insert_atom_commalist ',' insert_atom			{ $$ = $1; $$ = $$.concat([$3]);  }
 	;
 
 open_statement:
-		OPEN cursor
+		OPEN cursor			{ $$ = new cursor.OpenStatement($2); }
 	;
 
 rollback_statement:
-		ROLLBACK WORK
-	|	ROLLBACK
+		ROLLBACK opt_work	{ $$ = new transaction.RollbackStatement(); }
 	;
-
-select_into_statement:
-    SELECT opt_all_distinct selection
-    INTO target_commalist
-    table_exp
-	opt_order_by_clause
-    ;
-
-select_statement:
-    SELECT opt_all_distinct selection
-    table_exp
-    ;
 
 opt_all_distinct:
 		/* empty */
@@ -605,80 +615,96 @@ opt_all_distinct:
 	|	DISTINCT
 	;
 
-update_statement_positioned:
-		UPDATE table opt_join_ref_list SET assignment_commalist
-		WHERE CURRENT OF cursor
-	;
+select_into_statement:
+    SELECT opt_all_distinct selection
+    INTO table_ref
+	FROM dynamic_table_ref_commalist					
+	opt_join_ref_list
+	opt_where_clause
+	opt_group_by_clause
+	opt_having_clause
+	opt_order_by_clause	
+	{ 
+		$$ = new select.WritableSelectQuery(new select.SingleSelectQuery($3, $7, $8, $9, $10, $2), $5, $12);
+	}
+    ;
+
+select_statement:
+    SELECT opt_all_distinct selection
+	FROM dynamic_table_ref_commalist					
+	opt_join_ref_list
+	opt_where_clause
+	opt_group_by_clause
+	opt_having_clause					
+	{ 
+		$$ = new select.SingleSelectQuery($3, $5, $6, $7, $8, $2); 
+	}			
+    ;
 
 assignment_commalist:
-	|	assignment
-	|	assignment_commalist COMMA assignment
+	|	assignment								{ $$ = [$1]; }
+	|	assignment_commalist ',' assignment		{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
 assignment:
-		column EQUAL scalar_exp
-	|	column EQUAL NULLX
+		column EQUAL scalar_exp					{ $$ = new update.Assignment($1, $3); }
+	|	column EQUAL NULLX						{ $$ = new update.Assignment($1, null); }
+	;
+
+update_statement_positioned:
+		UPDATE table_ref opt_join_ref_list SET assignment_commalist
+		WHERE CURRENT OF cursor 
+		{
+			$$ = new cursor.UpdateCursorQuery($2, $3, $5, $9); 
+		}
 	;
 
 update_statement_searched:
-		UPDATE table opt_join_ref_list SET assignment_commalist opt_where_clause
+		UPDATE table_ref opt_join_ref_list SET assignment_commalist opt_where_clause
+		{
+			$$ = new update.UpdateQuery($2, $3, $5, $6);
+		}
 	;
 
 target_commalist:
-		target
-	|	target_commalist COMMA target
+		target									{ $$ = [$1]; }		
+	|	target_commalist ',' target				{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
 target:
-		parameter_ref
-	;
-
-opt_where_clause:
-		/* empty */
-	|	where_clause
+		parameter_ref							{ $$ = $1; }
 	;
 
 	/* query expressions */
 
 select_expr_op:
-		UNION
-	|	UNION ALL
-	|	INTERSECTION
-	|	EXCEPT
+		UNION												{ $$ = select.BinaryQueryOperator.UNION; }		
+	|	UNION ALL											{ $$ = select.BinaryQueryOperator.UNION; }
+	|	INTERSECTION										{ $$ = select.BinaryQueryOperator.INTERSECTION; }
+	|	EXCEPT												{ $$ = select.BinaryQueryOperator.EXCEPT; }
 	;
 
 select_expr_ordered:
-	select_expr opt_order_by_clause
+	select_expr opt_order_by_clause							{ $$ = new select.SortableSelectQuery($1, $2); }
 	;
 
 select_expr:
-		select_statement
-	|	select_expr select_expr_op select_term
-	| 	LEFT_PAREN select_expr RIGHT_PAREN
+		select_statement									{ $$ = $1; }
+	|	select_expr select_expr_op select_term				{ $$ = new select.BinarySelectQuery($1, $2, $3); }
+	| 	'(' select_expr ')'									{ $$ = $1; }
 	;
 
 select_term:
-		select_statement
-	| 	LEFT_PAREN select_term RIGHT_PAREN
+		select_statement									{ $$ = $1; }	
+	| 	'(' select_term ')'									{ $$ = $1; }
 	;
 
 
 selection:
-		selection_commalist
-	|	ASTERISK
+		selection_commalist									{ $$ = new select.ScalarSelection($1); }
+	|	ASTERISK											{ $$ = new select.AllSelection(); }
 	;
 
-table_exp:
-		from_clause
-		opt_where_clause
-		opt_group_by_clause
-		opt_having_clause
-	;
-
-from_clause:
-		FROM dynamic_table_ref_commalist
-		opt_join_ref_list
-	;
 
 opt_join_outer:
 		/* empty */
@@ -686,104 +712,100 @@ opt_join_outer:
 	;
 
 join_type:
-		LEFT opt_join_outer
-	|	RIGHT opt_join_outer
-	|	FULL opt_join_outer
-	|	INNER						
+		LEFT opt_join_outer									{ $$ = select.JoinType.LEFT; }
+	|	RIGHT opt_join_outer								{ $$ = select.JoinType.RIGHT; }
+	|	FULL opt_join_outer									{ $$ = select.JoinType.FULL; }	
+	|	INNER												{ $$ = select.JoinType.INNER; }
 	;
 	
 opt_join_on_clause:
 		/* empty */
-	|	ON search_condition
+	|	ON search_condition									{ $$ = $2; }
 	;
 
 join_ref:
-	join_type JOIN dynamic_table_ref opt_join_on_clause
+	join_type JOIN dynamic_table_ref opt_join_on_clause		{ $$ = new select.JoinRef($1, $2, $3); }
 	;
 
 join_ref_list:
-		join_ref
-	|	join_ref_list join_ref
+		join_ref						{ $$ = [$1]; }
+	|	join_ref_list join_ref			{ $$ = $1; $$ = $$.concat([$2]); }
 	;
 	
 opt_join_ref_list:
 		/* empty */
-	|	join_ref_list
+	|	join_ref_list					{ $$ = $1; }
 	;
 	
 dynamic_table_ref_commalist:
-		dynamic_table_ref
-	|	dynamic_table_ref_commalist COMMA dynamic_table_ref
+		dynamic_table_ref										{ $$ = [$1]; }
+	|	dynamic_table_ref_commalist ',' dynamic_table_ref		{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 	
 opt_alias:
 		/* empty */
-	|	AS range_variable
-	|	range_variable
+	|	AS range_variable						{ $$ = $2; }
+	|	range_variable							{ $$ = $1; }
 	;
 
 table_ref:
-		table opt_alias                        { $$ = $1; $$.alias = $2; }
+		table opt_alias                        	{ $$ = new select.NamedFromTableRef($1, $2); }
 	;
 
 dynamic_table_ref:
-		table_ref
-	|   subquery opt_alias
+		table_ref								{ $$ = $1; }
+	|   subquery opt_alias						{ $$ = new select.QueryFromTableRef($1, $2); }
 	;
 
 
-where_clause:
-		WHERE search_condition
+opt_where_clause:
+		/* empty */
+	|	WHERE search_condition									{ $$ = $2; }
 	;
 
 opt_group_by_clause:
 		/* empty */
-	|	GROUP BY column_ref_commalist
+	|	GROUP BY column_ref_spec_commalist						{ $$ = $2; }
 	;
 
-column_ref_spec:
-		column_ref
-	|	number_literal
-	;
-
-column_ref_commalist:
-		column_ref_spec
-	|	column_ref_commalist COMMA column_ref_spec
+column_ref_spec_commalist:
+		column_ref_spec											{ $$ = [$1]; }
+	|	column_ref_spec_commalist ',' column_ref_spec			{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
 opt_having_clause:
 		/* empty */
-	|	HAVING search_condition
+	|	HAVING search_condition									{ $$ = $2; }
 	;
 
 opt_order_by_clause:
 		/* empty */
-	|	ORDER BY ordering_spec_commalist
+	|	ORDER BY ordering_spec_commalist						{ $$ = $3; }
 	;
 
 ordering_spec_commalist:
-		ordering_spec
-	|	ordering_spec_commalist COMMA ordering_spec
+		ordering_spec											{ $$ = [$1]; }
+	|	ordering_spec_commalist ',' ordering_spec				{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
 ordering_spec:
-		number_literal opt_asc_desc
-	|	column_ref opt_asc_desc
+		column_ref_spec opt_asc_desc							{ $$ = new order.OrderBy($1, $2); }
 	;
 
 opt_asc_desc:
-		/* empty */
-	|	ASC
-	|	DESC
+		/* empty */												
+	|	ASC														{ $$ = order.OrderByDirection.ASC; }
+	|	DESC													{ $$ = order.OrderByDirection.DESC; }
 	;
 
 	/* embedded condition things */
 stmt:		
-		WHENEVER NOT FOUND when_action
-	|	WHENEVER SQLERROR when_action
+		WHENEVER NOT FOUND when_action							{ $$ = new when.WheneverNotFound($4); }		
+	|	WHENEVER SQLERROR when_action							{ $$ = new when.WheneverSQLError($3); }
 	;
 
 when_action:	
-		GOTO IDENTIFIER
-	|	CONTINUE
+		GOTO IDENTIFIER											{ $$ = new when.GotoWhenAction($2); }
+	|	CONTINUE												{ $$ = new when.ContinueWhenAction(); }
 	;
+	

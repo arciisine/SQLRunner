@@ -1,20 +1,28 @@
 import {ASTNode} from '../index';
 import {Query} from './index';
 import {SelectQuery} from './select';
-import {ColumnRef, TableRef} from '../common/ref';
+import {NamedColumnRef, TableRef} from '../common/ref';
 import {ScalarExpr} from '../common/scalar';
 import {NullableAtom} from '../common/literal';
 
 export class InsertValues extends ASTNode {}
 export class QueryValues extends InsertValues {
-	query:SelectQuery;
+	constructor(public query:SelectQuery) {
+		super();
+	}
 }
 export class AtomValues extends InsertValues {
-	atoms:Array<NullableAtom>;
+	constructor(public atoms:Array<NullableAtom>) {
+		super();
+	}
 }
 
 export class InsertQuery extends Query {
-	table:TableRef;
-	columns:Array<ColumnRef>;
-	values:InsertValues;
+	constructor (
+		public table:TableRef,
+		public columns:Array<NamedColumnRef>,
+		public values:InsertValues
+	) {
+		super()
+	}
 }

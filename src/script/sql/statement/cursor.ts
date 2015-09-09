@@ -1,37 +1,53 @@
 import {Statement,ManipulativeStatement} from '../index';
 import {TableRef,ParameterRef} from '../common/ref';
-import {SelectQuery, JoinRef} from '../query/select';
+import {SortableSelectQuery, JoinRef} from '../query/select';
 import {OrderBy} from '../query/orderby';
 import {Assignment} from '../query/update';
 
 export class CursorDefinitionStatement extends Statement {
-	name:string;
-	select:SelectQuery;
-	orderBy:Array<OrderBy>;	
+	constructor(
+		public name:string,
+		public select:SortableSelectQuery
+	) {
+		super();
+	}
 }
 
 export class DeleteCursorQuery extends ManipulativeStatement {
-	from:TableRef;
-	cursor:string;
+	constructor(
+		public from:TableRef,
+		public joins:Array<JoinRef>,
+		public cursor:string
+	) {
+		super()
+	}
 }
 
 export class UpdateCursorQuery extends ManipulativeStatement {
-	table:TableRef;
-	joins:Array<JoinRef>;
-	assignments:Array<Assignment>;
-	cursor:string;
+	constructor(
+		public table:TableRef,
+		public joins:Array<JoinRef>,
+		public assignments:Array<Assignment>,
+		public cursor:string
+	) {
+		super();
+	}
 }
 
-
-export class Fetch extends ManipulativeStatement {
-	cursor:string;
-	parameters:Array<ParameterRef>;
+export class CursorStatement extends ManipulativeStatement {
+	constructor(public cursor:string) {
+		super()
+	}
 }
 
-export class Open extends ManipulativeStatement {
-	cursor:string;
+export class FetchStatement extends CursorStatement {
+	constructor(
+		cursor:string,
+		public parameters:Array<ParameterRef>) 
+	{
+		super(cursor)
+	}
 }
 
-export class Close extends ManipulativeStatement {
-	cursor:string;
-}
+export class OpenStatement extends CursorStatement {}
+export class CloseStatement extends CursorStatement {}

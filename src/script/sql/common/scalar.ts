@@ -1,6 +1,6 @@
 import {ASTNode} from '../index';
 import {Atom} from '../common/literal';
-import {ColumnRef} from '../common/ref';
+import {NamedColumnRef} from '../common/ref';
 import {SelectQuery} from '../query/select';
 
 export enum BinaryExprOperator {
@@ -36,8 +36,8 @@ export class BinaryExpr extends ScalarExpr {
 	
 }
 
-export class ColumnRefExpr extends ScalarExpr {
-	constructor(public column:ColumnRef) {
+export class NamedColumnRefExpr extends ScalarExpr {
+	constructor(public column:NamedColumnRef) {
 		super();
 	}
 }
@@ -65,7 +65,7 @@ export class FunctionRefByColumnExpr extends FunctionRefExpr {}
 export class FunctionRefWithAllColumnExpr extends FunctionRefExpr {}
 
 export class FunctionRefWithDistinctColumnExpr extends FunctionRefExpr {
-	constructor(name:string, public column:ColumnRef) {
+	constructor(name:string, public column:NamedColumnRefExpr) {
 		super(name);
 	}
 }

@@ -1,13 +1,17 @@
-import {Statement} from '../index';
+import {ASTNode, Statement} from '../index';
 
-export class WhenAction {}
-export class ContinueWhenAction{}
-export class GotoWhenAction {
-	name:string;
+export class WhenAction extends ASTNode {}
+export class ContinueWhenAction extends WhenAction {}
+export class GotoWhenAction extends WhenAction {
+	constructor(public name:string) {
+		super()
+	}
 }
 
 export class WheneverStatement extends Statement {
-	action:WhenAction;
+	constructor(public action:WhenAction) {
+		super();
+	}
 }
 
 export class WheneverNotFound extends WheneverStatement {}

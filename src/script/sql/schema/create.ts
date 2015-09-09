@@ -11,31 +11,59 @@ import {ForeignKeyConstraint,TableConstraint} from './constraint';
 
 export class Schema extends ASTNode {}
 
-export class ColumnSchema extends Schema {
-	name:String;
-	type:ColumnType;
-	notNull:boolean;
-	unique:boolean;
-	primaryKey:boolean;
-	defaultValue:NullableLiteral;
-	check:SearchCondition;
-	reference:ForeignKeyConstraint;
+export class ColumnConstraints extends ASTNode {
+	constructor(
+		public notNull:boolean,
+		public unique:boolean,
+		public primaryKey:boolean,
+		public defaultValue:NullableLiteral,
+		public check:SearchCondition,
+		public reference:ForeignKeyConstraint
+	) {
+		super()
+	}
+}
+
+export class ColumnSchema extends ASTNode {
+	constructor(
+		public name:String,
+		public type:ColumnType,
+		public constraints:ColumnConstraints
+	) {
+		super()
+	}
 }
 
 export class TableSchema extends Schema {
-	name:TableRef;
-	columns:Array<ColumnSchema>;
-	constraints:Array<TableConstraint>;
+	public columns:Array<ColumnSchema>;
+	public constraints:Array<TableConstraint>;
+
+	constructor(
+		public name:TableRef,
+		created:Array<ColumnSchema|TableConstraint>
+	) {
+		super();
+		this.columns = <Array<ColumnSchema>>created.filter(id => id instanceof ColumnSchema);
+		this.constraints = created.filter(id => id instanceof TableConstraint);
+	}
 }
 
 export class ViewSchema extends Schema {
-	name:TableRef;
-	columns:Array<string>;
-	query:SelectQuery;
-	checkOption:boolean;
+	constructor(
+		public name:TableRef,
+		public columns:Array<string>,
+		public query:SelectQuery,
+		public checkOption:boolean = false
+	) {
+		super();
+	}
 }
 
 export class CreateSchemaStatement extends Statement {
-	user:string;
-	schemas:Array<Schema>;
+	constructor(
+		public user:string,
+		public schemas:Array<Schema>
+	) {
+		super();
+	}
 }

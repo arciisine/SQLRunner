@@ -1,17 +1,28 @@
 import {ASTNode, ManipulativeStatement} from '../index';
 import {TableRef} from '../common/ref';
-import {NullableAtom} from '../common/literal';
+import {Null} from '../common/literal';
+import {ScalarExpr} from '../common/scalar';
 import {JoinRef} from './select';
 import {SearchCondition} from './search-condition';
 
+export type NullableScalar = ScalarExpr|Null;
+
 export class Assignment extends ASTNode {
-	column:string;
-	value:NullableAtom;
+	constructor(
+		public column:string,
+		public value:NullableScalar
+	) {
+		super();
+	}
 }
 
 export class UpdateQuery extends ManipulativeStatement {
-	table:TableRef;
-	joins:Array<JoinRef>;
-	assignments:Array<Assignment>;
-	where:SearchCondition;
+	constructor(
+		public table:TableRef,
+		public joins:Array<JoinRef>,
+		public assignments:Array<Assignment>,
+		public where:SearchCondition
+	) {
+		super();
+	}
 }
