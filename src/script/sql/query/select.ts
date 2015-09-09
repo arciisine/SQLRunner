@@ -5,10 +5,18 @@ import {SearchCondition} from './search-condition';
 import {Ref, ColumnRef, TableRef, ParameterRef} from '../common/ref';
 import {ScalarExpr} from '../common/scalar';
 
+export class QueryScalarExpr extends ASTNode {
+	constructor(public expr:ScalarExpr, public alias:string = null) {
+		super()
+	}
+}
+
 export class QuerySelection extends ASTNode {}
 export class AllSelection extends QuerySelection {}
 export class ScalarSelection extends QuerySelection {
-	columns:Array<ScalarExpr>;
+	constructor(public columns:Array<QueryScalarExpr>) {
+		super()
+	}
 }
 
 export class FromTableRef extends Ref {

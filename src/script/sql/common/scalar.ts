@@ -4,7 +4,7 @@ import {ColumnRef} from '../common/ref';
 import {SelectQuery} from '../query/select';
 
 export enum BinaryExprOperator {
-	PLUS, MINUS, ASTERISK, DIVIDE
+	PLUS, MINUS, MULTIPLY, DIVIDE
 }
 
 export enum UnaryExprOperator {
@@ -20,29 +20,44 @@ export enum ComparisonExprOperator {
 export class ScalarExpr extends ASTNode {}
 
 export class AtomExpr extends ScalarExpr {
-	value:Atom;
+	constructor(public value:Atom) {
+		super();
+	}
 }
 
 export class BinaryExpr extends ScalarExpr {
-	left:ScalarExpr;
-	right:ScalarExpr;
-	op:BinaryExprOperator;
+	constructor(
+		public left:ScalarExpr,
+		public op:BinaryExprOperator,
+		public right:ScalarExpr
+	) {
+		super()
+	}
+	
 }
 
 export class ColumnRefExpr extends ScalarExpr {
-	column:ColumnRef
+	constructor(public column:ColumnRef) {
+		super();
+	}
 }
 
 export class FunctionRefExpr extends ScalarExpr {
-	name:string;
+	constructor(public name:string) {
+		super();		
+	}
 }
 
 export class QueryExpr extends ScalarExpr {
-	query:SelectQuery;
+	constructor(public query:SelectQuery) {
+		super()		
+	}
 }
 
 export class FunctionRefWithScalarExpr extends FunctionRefExpr {
-	expr:ScalarExpr;
+	constructor(name:string, public expr:ScalarExpr, all:boolean = false) {
+		super(name);
+	}
 }
 
 export class FunctionRefByColumnExpr extends FunctionRefExpr {}
@@ -50,10 +65,13 @@ export class FunctionRefByColumnExpr extends FunctionRefExpr {}
 export class FunctionRefWithAllColumnExpr extends FunctionRefExpr {}
 
 export class FunctionRefWithDistinctColumnExpr extends FunctionRefExpr {
-	column:ColumnRef;
+	constructor(name:string, public column:ColumnRef) {
+		super(name);
+	}
 }
 
 export class UnaryExpr extends ScalarExpr {
-	source:ScalarExpr;
-	op:UnaryExprOperator;
+	constructor(public source:ScalarExpr, public op:UnaryExprOperator) {
+		super();
+	}
 }

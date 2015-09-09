@@ -9,18 +9,32 @@ export type NullableAtom = Atom|Null;
 
 
 export class Parameter extends Atom {
-	parameter:ParameterRef;
+	constructor(public parameter:ParameterRef) {
+		super()
+    }
 }
 
 export class StringLiteral extends Literal {
-	value:string;
+	constructor(public value:string) {
+		super()
+	}
 }
 
 export class NumberLiteral extends Literal {
-	value:number;
+	constructor(public value:number) {
+		super()
+	}
 }
 
 export class ScientificNumberLiteral extends Literal {
-	value:number;
-	precision:number
+	static fromString(rep:string):ScientificNumberLiteral {
+		let [left,right] = rep.split(/e/i).map(v => parseFloat(v));
+		
+		let ret = new ScientificNumberLiteral(left, right);
+		return ret;
+	}
+	
+	constructor(public value:number, precision:number) {
+		super()
+	}
 }

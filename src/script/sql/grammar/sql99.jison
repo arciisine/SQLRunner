@@ -10,6 +10,9 @@
 "ASC"                                 return 'ASC';
 "AUTHORIZATION"                       return 'AUTHORIZATION';
 "BETWEEN"                             return 'BETWEEN';
+"BIGINT"							  return 'BIGINT';
+"BINARY"							  return 'BINARY';
+"BOOLEAN"							  return 'BOOLEAN';
 "BY"                                  return 'BY';
 CHAR(ACTER)?                          return 'CHARACTER';
 "CHECK"                               return 'CHECK';
@@ -19,6 +22,7 @@ CHAR(ACTER)?                          return 'CHARACTER';
 "CREATE"                              return 'CREATE';
 "CURRENT"                             return 'CURRENT';
 "CURSOR"                              return 'CURSOR';
+"DATE"								  return 'DATE';
 "DECIMAL"                             return 'DECIMAL';
 "DECLARE"                             return 'DECLARE';
 "DEFAULT"                             return 'DEFAULT';
@@ -79,11 +83,16 @@ INT(EGER)?                            return 'INTEGER';
 "SOME"                                return 'SOME';
 "SQLCODE"                             return 'SQLCODE';
 "TABLE"                               return 'TABLE';
+"TIME"								  return 'TIME';
+"TIMESTAMP"							  return 'TIMESTAMP';
 "TO"                                  return 'TO';
 "UNION"                               return 'UNION';
 "UPDATE"                              return 'UPDATE';
 "USER"                                return 'USER';
 "VALUES"                              return 'VALUES';
+"VARBINARY"							  return 'VARBINARY';
+"VARCHAR"							  return 'VARCHAR';
+"VARYING"							  return 'VARYING';
 "VIEW"                                return 'VIEW';
 "WHENEVER"                            return 'WHENEVER';
 "WHERE"                               return 'WHERE';
@@ -151,8 +160,13 @@ INT(EGER)?                            return 'INTEGER';
 %start program
 
 %{
-import {Atom} from '../common/literal';
-import {ParameterRef} from '../common/ref';
+import * as literal from '../common/literal';
+import * as ref from '../common/ref';
+import * as scalar from '../common/scalar';
+import * as columnType from '../schema/column-type';
+import * as cond from '../query/search-condition';
+import * as pred from '../query/predicate';
+import * as select from '../query/select';
 %}
 
 %%
@@ -168,11 +182,23 @@ stmt_list:
 	;
 
 
+string_literal:
+		STRING_LITERAL { $$ = new literal.StringLiteral($1); }
+	;
+	
+number_literal:
+		NUMBER_LITERAL					{ $$ = new literal.NumberLiteral(parseFloat($1));  }
+	;
+
+scientific_number_literal:
+		SCIENTIFIC_NUMBER_LITERAL		{ $$ = literal.ScientificNumberLiteral.fromString($1); }
+	;
+
 	/* the various things you can name */
 literal:
-		STRING_LITERAL
-	|	NUMBER_LITERAL
-	|	SCIENTIFIC_NUMBER_LITERAL
+		scientific_literal					
+	|	number_literal
+	|	scientific_number_literal
 	;	
 	
 column:		IDENTIFIER
@@ -196,174 +222,161 @@ alias:		IDENTIFIER
 
 		/* data types */
 
+opt_size:
+		/* empty */
+	|	LEFT_PAREN number_literal RIGHT_PAREN 						{ $$ = $2.value }
+	;
+	
+opt_size_and_precision:
+		/* empty */
+	|	LEFT_PAREN number_literal RIGHT_PAREN 						{ $$ = [$2.value] }
+	| 	LEFT_PAREN number_literal COMMA number_literal RIGHT_PAREN 	{ $$ = [$2.value, $4.value] }
+	;
+	
+opt_varying:
+		/* empty */
+	|	VARYING														{ $$ = true }				
+	;
+
+opt_timezone:
+		/* empty */
+	|	WITH TIMEZONE												{ $$ = true }
+	;
+
 data_type:
-		CHARACTER
-	|	CHARACTER LEFT_PAREN NUMBER_LITERAL RIGHT_PAREN
-	|	NUMERIC
-	|	NUMERIC LEFT_PAREN NUMBER_LITERAL RIGHT_PAREN
-	|	NUMERIC LEFT_PAREN NUMBER_LITERAL COMMA NUMBER_LITERAL RIGHT_PAREN
-	|	DECIMAL
-	|	DECIMAL LEFT_PAREN NUMBER_LITERAL RIGHT_PAREN
-	|	DECIMAL LEFT_PAREN NUMBER_LITERAL COMMA NUMBER_LITERAL RIGHT_PAREN
-	|	INTEGER
-	|	SMALLINT
-	|	FLOAT
-	|	FLOAT LEFT_PAREN NUMBER_LITERAL RIGHT_PAREN
-	|	REAL
-	|	DOUBLE PRECISION
+		CHARACTER opt_varying opt_size							{ $$ = new columnType.CharacterColumnType($3, !!$2) }
+	|	VARCHARACTER  opt_size									{ $$ = new columnType.CharacterColumnType($2, true) }
+	|	BINARY opt_varying opt_size								{ $$ = new columnType.BinaryColumnType($3, !!$2) }
+	|	VARBINARY  opt_size										{ $$ = new columnType.BinaryColumnType($2, true) }
+	|	NUMERIC	opt_size_and_precision							{ $$ = new columnType.NumericColumnType($2 && $2[0], $2 && $2[1]); }
+	|	DECIMAL opt_size_and_precision							{ $$ = new columnType.DecimalColumnType($2 && $2[0], $2 && $2[1]); }
+	|	INTEGER opt_size										{ $$ = new columnType.IntegerColumnType($2); }
+	|	SMALLINT												{ $$ = new columnType.SmallIntegerColumnType(); }
+	|	BIGINT													{ $$ = new columnType.BigIntegerColumnType(); }
+	|	BOOLEAN													{ $$ = new columnType.BooleanColumnType(); }		
+	|	FLOAT opt_size											{ $$ = new columnType.FloatColumnType($2); }
+	|	REAL													{ $$ = new columnType.RealColumnType(); }				
+	|	DOUBLE PRECISION										{ $$ = new columnType.DoubleColumnType(); }
+	|	DATE opt_size opt_timezone								{ $$ = new columnType.DateColumnType($2, $3); }
+	|	TIME opt_size opt_timezone								{ $$ = new columnType.TimeColumnType($2, $3); }
+	|	TIMESTAMP opt_size opt_timezone							{ $$ = new columnType.TimestampColumnType($2, $3); }
 	;
 
 	/* search conditions */
 
-search_condition:
-	|	search_condition OR search_condition
-	|	search_condition AND search_condition
-	|	NOT search_condition
-	|	LEFT_PAREN search_condition RIGHT_PAREN
-	|	predicate
-	;
-
-predicate:
-		comparison_predicate
-	|	between_predicate
-	|	like_predicate
-	|	test_for_null
-	|	in_predicate
-	|	all_or_any_predicate
-	|	existence_test
-	;
-
-comparison:
-    EQUAL
-    | NOT_EQUAL
-    | LESS_THAN
-    | GREATER_THAN
-    | LESS_THAN_EQUAL
-    | GREATER_THAN_EQUAL
-    ;
-
-comparison_predicate:
-		scalar_exp comparison scalar_exp
-	;
-
-between_predicate:
-		scalar_exp NOT BETWEEN scalar_exp AND scalar_exp
-	|	scalar_exp BETWEEN scalar_exp AND scalar_exp
-	;
-
-like_predicate:
-		scalar_exp NOT LIKE STRING_LITERAL opt_escape
-	|	scalar_exp LIKE STRING_LITERAL opt_escape
-	;
-
-opt_escape:
-		/* empty */
-	|	ESCAPE STRING_LITERAL
-	;
-
-test_for_null:
-		column_ref IS NOT NULLX
-	|	column_ref IS NULLX
+search_condition:										
+	|	search_condition OR search_condition			{ $$ = new cond.BinarySearchCondition($1, cond.SearchConditionOperator.AND, $3) }
+	|	search_condition AND search_condition			{ $$ = new cond.BinarySearchCondition($1, cond.SearchConditionOperator.OR, $3) }
+	|	NOT search_condition							{ $$ = new cond.NotSearchCondition($2); }
+	|	LEFT_PAREN search_condition RIGHT_PAREN			{ $$ = $2; }
+	|	predicate										{ $$ = $1; }
 	;
 
 opt_not:
 		/* empty */
-	|	NOT
+	|	NOT							{ $$ = true; }
 	;
 
-in_predicate:
-		scalar_exp opt_not IN subquery
-	|	scalar_exp opt_not IN LEFT_PAREN atom_commalist RIGHT_PAREN
+opt_escape:
+		/* empty */
+	|	ESCAPE string_literal		{ $$ = $2 }
 	;
 
 atom_commalist:
-		atom
-	|	atom_commalist COMMA atom
+		atom						{ $$ = [$1]; }
+	|	atom_commalist COMMA atom	{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
-all_or_any_predicate:
-		scalar_exp comparison any_all_some subquery
-	;
+comparison:
+    	EQUAL					{ $$ = scalar.ComparisonExprOperator.EQUAL }
+    | 	NOT_EQUAL				{ $$ = scalar.ComparisonExprOperator.NOT_EQUAL }
+    | 	LESS_THAN				{ $$ = scalar.ComparisonExprOperator.LESS_THAN }
+    | 	GREATER_THAN			{ $$ = scalar.ComparisonExprOperator.GREATER_THAN }
+    | 	LESS_THAN_EQUAL			{ $$ = scalar.ComparisonExprOperator.LESS_THAN_EQUAL }
+    | 	GREATER_THAN_EQUAL		{ $$ = scalar.ComparisonExprOperator.GREATER_THAN_EQUAL }
+    ;
+
 
 any_all_some:
-		ANY
-	|	ALL
-	|	SOME
+		ANY						{ $$ = pred.QueryComparisonOperator.ANY;  }
+	|	ALL						{ $$ = pred.QueryComparisonOperator.ALL; }
+	|	SOME					{ $$ = pred.QueryComparisonOperator.SOME; }
 	;
 
-existence_test:
-		EXISTS subquery
+predicate:
+		scalar_exp comparison scalar_exp							{ $$ = new pred.ComparisonPredicate($1, $2, $3); }
+	|	scalar_exp opt_not BETWEEN scalar_exp AND scalar_exp 		{ $$ = new pred.BetweenPredicate($1, $4, $5, !!$2); }
+	|	scalar_exp opt_not LIKE string_literal opt_escape 			{ $$ = new pred.LikePredicate($1, $3, $4, !!$2); }
+	|	column_ref IS opt_not NULLX									{ $$ = new pred.NullCheckPredicate($1, !!$3); }
+	|	scalar_exp opt_not IN subquery								{ $$ = new pred.InQueryPredicate($1, $4, !!$2); }	
+	|	scalar_exp opt_not IN LEFT_PAREN atom_commalist RIGHT_PAREN { $$ = new pred.InArrayPredicate($1, $5, !!$2); }
+	|	scalar_exp comparison any_all_some subquery					{ $$ = new pred.QueryComparisonPredicate($1, $2, $3, $4); }
+	|	EXISTS subquery												{ $$ = new pred.ExistenceCheckPredicate($2); }
 	;
 
 subquery:
-		LEFT_PAREN select_statement RIGHT_PAREN
-	|	LEFT_PAREN subquery RIGHT_PAREN
+		LEFT_PAREN select_statement RIGHT_PAREN						{ $$ = $2 }
+	|	LEFT_PAREN subquery RIGHT_PAREN								{ $$ = $2 }
 	;
 
 	/* scalar expressions */
 
 scalar_exp:
-		scalar_exp PLUS scalar_exp
-	|	scalar_exp MINUS scalar_exp
-	|	scalar_exp ASTERISK scalar_exp
-	|	scalar_exp DIVIDE scalar_exp
-	|	PLUS scalar_exp %prec UMINUS
-	|	MINUS scalar_exp %prec UMINUS
-	|	atom
-	|	column_ref
-	|	function_ref
-	|	LEFT_PAREN select_statement RIGHT_PAREN
-	|	LEFT_PAREN scalar_exp RIGHT_PAREN
+		scalar_exp PLUS scalar_exp					{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.PLUS, $2); }
+	|	scalar_exp MINUS scalar_exp					{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.MINUS, $2); }
+	|	scalar_exp ASTERISK scalar_exp				{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.MULTIPLY, $2); }
+	|	scalar_exp DIVIDE scalar_exp				{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.DIVIDE, $2); }
+	|	PLUS scalar_exp %prec UMINUS				{ $$ = new scalar.UnaryExpr($1, scalar.UnaryExprOperator.PLUS); }
+	|	MINUS scalar_exp %prec UMINUS				{ $$ = new scalar.UnaryExpr($1, scalar.UnaryExprOperator.MINUS); }
+	|	atom										{ $$ = new scalar.AtomExpr($1); }
+	|	column_ref									{ $$ = new scalar.ColumnRefExpr($1); }
+	|	function_ref								{ $$ = new scalar.FunctionRefExpr($1); }
+	|	LEFT_PAREN select_statement RIGHT_PAREN		{ $$ = new scalar.QueryExpr($1); }
+	|	LEFT_PAREN scalar_exp RIGHT_PAREN			{ $$ = $2; }
 	;
 	
 selection_scalar:
-		scalar_exp
-	|	scalar_exp alias
-	|	scalar_exp AS alias
+		scalar_exp									{ $$ = new select.QueryScalarExpr($1); }
+	|	scalar_exp alias							{ $$ = new select.QueryScalarExpr($1, $2); }
+	|	scalar_exp AS alias							{ $$ = new select.QueryScalarExpr($1, $3); }
 	;
 
 selection_commalist:
-		selection_scalar
-	|	selection_commalist COMMA selection_scalar
+		selection_scalar							{ $$ = [$1]; }
+	|	selection_commalist COMMA selection_scalar	{ $$ = $1; $$ = $$.concat([$3]); }
 	;
 
 atom:
-		parameter_ref
+		parameter_ref							
 	|	literal
 	|	USER
 	;
 
 parameter_ref:
-		parameter
-	|	parameter parameter
-	|	parameter INDICATOR parameter		
-	%{
-		let ref = new ParameterRef();
-		ref.name = $1;
-		ref.indicator = $3 || $2;
-		return ref;
-	}%
+		parameter							{ $$ = new ref.ParameterRef($1); }
+	|	parameter parameter					{ $$ = new ref.ParameterRef($1, $2); }
+	|	parameter INDICATOR parameter 		{ $$ = new ref.ParameterRef($1, $3); }
 	;
 
 function_ref:
-		BUILTIN_FUNCTION LEFT_PAREN ASTERISK RIGHT_PAREN
-	|	BUILTIN_FUNCTION LEFT_PAREN DISTINCT column_ref RIGHT_PAREN
-	|	BUILTIN_FUNCTION LEFT_PAREN ALL scalar_exp RIGHT_PAREN
-	|	BUILTIN_FUNCTION LEFT_PAREN scalar_exp RIGHT_PAREN
+		BUILTIN_FUNCTION LEFT_PAREN ASTERISK RIGHT_PAREN				{ $$ = new scalar.FunctionRefWithAllColumnExpr($1); }
+	|	BUILTIN_FUNCTION LEFT_PAREN DISTINCT column_ref RIGHT_PAREN		{ $$ = new scalar.FunctionRefWithDistinctColumnExpr($1, $4);  }
+	|	BUILTIN_FUNCTION LEFT_PAREN ALL scalar_exp RIGHT_PAREN			{ $$ = new scalar.FunctionRefWithScalarExpr($1, $4, true); }
+	|	BUILTIN_FUNCTION LEFT_PAREN scalar_exp RIGHT_PAREN				{ $$ = new scalar.FunctionRefWithScalarExpr($1, $4); }
 	;
 
 
 	/* miscellaneous */
 
 table:
-		IDENTIFIER
-	|	IDENTIFIER PERIOD IDENTIFIER
+		IDENTIFIER										{ $$ = new ref.TableRef($1, null); }
+	|	IDENTIFIER PERIOD IDENTIFIER					{ $$ = new ref.TableRef($2, $1); }
 	;
 
 column_ref:
-		IDENTIFIER
-	|	IDENTIFIER PERIOD IDENTIFIER	/* needs semantics */
-	|	IDENTIFIER PERIOD IDENTIFIER PERIOD IDENTIFIER
+		IDENTIFIER										{ $$ = new ref.ColumnRef($1); } 						
+	|	IDENTIFIER PERIOD IDENTIFIER					{ $$ = new ref.ColumnRef($2, $1); }
+	|	IDENTIFIER PERIOD IDENTIFIER PERIOD IDENTIFIER  { $$ = new ref.ColumnRef($3, $2, $1); }
 	;
 
 	/* schema definition language */
@@ -710,7 +723,7 @@ opt_alias:
 	;
 
 table_ref:
-		table opt_alias
+		table opt_alias                        { $$ = $1; $$.alias = $2; }
 	;
 
 dynamic_table_ref:
@@ -730,7 +743,7 @@ opt_group_by_clause:
 
 column_ref_spec:
 		column_ref
-	|	NUMBER_LITERAL
+	|	number_literal
 	;
 
 column_ref_commalist:
@@ -754,7 +767,7 @@ ordering_spec_commalist:
 	;
 
 ordering_spec:
-		NUMBER_LITERAL opt_asc_desc
+		number_literal opt_asc_desc
 	|	column_ref opt_asc_desc
 	;
 

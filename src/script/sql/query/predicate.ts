@@ -5,56 +5,88 @@ import {ColumnRef} from '../common/ref';
 import {SearchCondition} from './search-condition'
 import {SelectQuery} from './select';
 
-enum QueryComparisonOperator {
+export enum QueryComparisonOperator {
 	ANY, ALL, SOME
 }
 
 export class Predicate extends SearchCondition {}
 
 export class ComparisonPredicate extends Predicate {
-	left:ScalarExpr;
-	right:ScalarExpr;
-	comparison:ComparisonExprOperator;
+	constructor(
+		public left:ScalarExpr,
+		public comparison:ComparisonExprOperator,
+		public right:ScalarExpr
+	) {
+		super()
+	}
 }
 
 export class BetweenPredicate extends Predicate {
-	source:ScalarExpr;
-	lower:ScalarExpr;
-	upper:ScalarExpr;
-	inverse:boolean;
+	constructor(
+		public source:ScalarExpr,
+		public lower:ScalarExpr,
+		public upper:ScalarExpr,
+		public inverse:boolean = false
+	) {
+		super()
+	}
 }
 
 export class LikePredicate extends Predicate {
-	left:ScalarExpr;
-	inverse:boolean;
-	right:StringLiteral;
-	escape:StringLiteral;
+	constructor(
+		public left:ScalarExpr,
+		public right:StringLiteral,
+		public escape:StringLiteral = null,
+		public inverse:boolean = false
+	) {
+		super()
+	}
 }
 
 export class NullCheckPredicate extends Predicate {
-	column:ColumnRef;
-	inverse:boolean;
+	constructor(
+		public column:ColumnRef,
+		public inverse:boolean = false
+	) {
+		super()
+	}
 }
 
 export class InQueryPredicate extends Predicate {
-	left:ScalarExpr;
-	right:SelectQuery;
-	inverse:boolean;
+	constructor(
+		public left:ScalarExpr,
+		public right:SelectQuery,
+		public inverse:boolean = false
+	) {
+		super()
+	}
 }
 
 export class InArrayPredicate extends Predicate {
-	left:ScalarExpr;
-	right:Array<Literal>;
-	inverse:boolean;
+	constructor(
+		public left:ScalarExpr,
+		public right:Array<Literal>,
+		public inverse:boolean
+	) {
+		super()
+	}
 }
 
 export class QueryComparisonPredicate extends Predicate {
-	left:ScalarExpr;
-	comparison:ComparisonExprOperator;
-	mode:QueryComparisonOperator;
-	right:SelectQuery;
+	constructor(
+		public left:ScalarExpr,
+		public comparison:ComparisonExprOperator,
+		public mode:QueryComparisonOperator,
+		public right:SelectQuery
+	) {
+		super()
+	}
 }
 
 export class ExistenceCheckPredicate extends Predicate {
-	query:SelectQuery;
+	constructor(
+		public query:SelectQuery
+	) {
+		super()
+	}
 }

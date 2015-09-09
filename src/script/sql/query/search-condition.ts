@@ -2,16 +2,24 @@ import {ASTNode} from '../index';
 
 export class SearchCondition extends ASTNode {}
 
-enum SearchConditionOperator {
+export enum SearchConditionOperator {
 	AND, OR
 }
 
 export class BinarySearchCondition extends SearchCondition {
-	left:SearchCondition;
-	right:SearchCondition;
-	op:SearchConditionOperator;
+	constructor(
+		public left:SearchCondition,
+		public op:SearchConditionOperator,
+		public right:SearchCondition
+	) {
+		super()
+	}
 }
 
 export class NotSearchCondition extends SearchCondition {
-	condition:SearchCondition;
+	constructor(
+		public 	condition:SearchCondition
+	) {
+		super()
+	}
 }
