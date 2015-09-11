@@ -3,10 +3,34 @@
 
 import {parser} from 'sql/grammar/sql99';
 import {InsertQuery,InsertValues} from 'sql/query/insert';
+import * as util from 'sql/util';
  
 let sqlParser = new parser.Parser();
 
 export function start(zipjs:zipjs.Zip) {
+	
+	let query = `SELECT p1.PLAYERID, 
+       f1.PLAYERNAME, 
+       p2.PLAYERID, 
+       f2.PLAYERNAME 
+FROM   PLAYER f1, 
+       PLAYER f2, 
+       PLAYS p1 
+       FULL OUTER JOIN PLAYS p2 
+                    ON p1.PLAYERID < p2.PLAYERID 
+                       AND p1.TEAMID = p2.TEAMID 
+GROUP  BY p1.PLAYERID, 
+          f1.PLAYERID, 
+          p2.PLAYERID, 
+          f2.PLAYERID 
+HAVING Count(p1.PLAYERID) = Count(*) 
+       AND Count(p2.PLAYERID) = Count(*) 
+       AND p1.PLAYERID = f1.PLAYERID 
+       AND p2.PLAYERID = f2.PLAYERID; `
+	   
+	let ast = sqlParser.parse(query);
+	console.log(ast[0]);
+	console.log(util.join(ast, ';'));
 	
 	getFiles(zipjs, onFile, onReady);	
 }

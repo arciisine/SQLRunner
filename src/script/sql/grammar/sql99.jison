@@ -179,6 +179,7 @@ import * as cursor from '../statement/cursor';
 import * as transaction from '../statement/transaction';
 import * as order from '../query/orderby';
 import * as when from '../statement/when';
+
 %}
 
 %%
@@ -294,8 +295,8 @@ data_type:
 	/* search conditions */
 
 search_condition:										
-	|	search_condition OR search_condition			{ $$ = new cond.BinarySearchCondition($1, cond.SearchConditionOperator.AND, $3) }
-	|	search_condition AND search_condition			{ $$ = new cond.BinarySearchCondition($1, cond.SearchConditionOperator.OR, $3) }
+	|	search_condition OR search_condition			{ $$ = new cond.BinarySearchCondition($1, cond.SearchConditionOperator.OR, $3) }
+	|	search_condition AND search_condition			{ $$ = new cond.BinarySearchCondition($1, cond.SearchConditionOperator.AND, $3) }
 	|	NOT search_condition							{ $$ = new cond.NotSearchCondition($2); }
 	|	'(' search_condition ')'						{ $$ = $2; }
 	|	predicate										{ $$ = $1; }
@@ -340,10 +341,10 @@ predicate:
 	|	scalar_exp opt_not IN subquery								{ $$ = new pred.InQueryPredicate($1, $4, !!$2); }	
 	|	scalar_exp opt_not IN '(' atom_commalist ')'				 { $$ = new pred.InArrayPredicate($1, $5, !!$2); }
 	|	scalar_exp comparison any_all_some subquery					{ $$ = new pred.QueryComparisonPredicate($1, $2, $3, $4); }
-	|	opt_not EXISTS subquery												{ $$ = new pred.ExistenceCheckPredicate($3, $1); }
+	|	EXISTS subquery												{ $$ = new pred.ExistenceCheckPredicate($2); }
 	;
 
-subquery:
+subquery: 
 		'(' select_statement ')'						{ $$ = $2 }
 	|	'(' subquery ')'								{ $$ = $2 }
 	;
@@ -359,15 +360,15 @@ scalar_exp:
 	|	MINUS scalar_exp %prec UMINUS				{ $$ = new scalar.UnaryExpr($1, scalar.UnaryExprOperator.MINUS); }
 	|	atom										{ $$ = new scalar.AtomExpr($1); }
 	|	named_column_ref							{ $$ = new scalar.NamedColumnRefExpr($1); }
-	|	function_ref								{ $$ = new scalar.FunctionRefExpr($1); }
+	|	function_ref								{ $$ = new scalar.FunctionExpr($1); }
 	|	'(' select_statement ')'					{ $$ = new scalar.QueryExpr($1); }
 	|	'(' scalar_exp ')'							{ $$ = $2; }
 	;
 	
 selection_scalar:
-		scalar_exp									{ $$ = new select.QueryScalarExpr($1); }
-	|	scalar_exp alias							{ $$ = new select.QueryScalarExpr($1, $2); }
-	|	scalar_exp AS alias							{ $$ = new select.QueryScalarExpr($1, $3); }
+		scalar_exp									{ $$ = new select.ScalarSelectionExpr($1); }
+	|	scalar_exp alias							{ $$ = new select.ScalarSelectionExpr($1, $2); }
+	|	scalar_exp AS alias							{ $$ = new select.ScalarSelectionExpr($1, $3); }
 	;
 
 selection_commalist:
@@ -380,6 +381,13 @@ atom:
 	|	literal										{ $$ = $1; }
 	;
 
+function_selection:
+		opt_distinct selection_scalar				{ $$ = new select.SingleScalarSelection($2, $1); }
+	|	opt_distinct ASTERISK						{ $$ = new select.AllSelection($1); }
+	;
+
+	
+
 parameter_ref:
 		parameter							{ $$ = new ref.ParameterRef($1); }
 	|	parameter parameter					{ $$ = new ref.ParameterRef($1, $2); }
@@ -387,10 +395,7 @@ parameter_ref:
 	;
 
 function_ref:
-		BUILTIN_FUNCTION '(' ASTERISK ')'					{ $$ = new scalar.FunctionRefWithAllColumnExpr($1); }
-	|	BUILTIN_FUNCTION '(' DISTINCT named_column_ref ')'	{ $$ = new scalar.FunctionRefWithDistinctColumnExpr($1, $4);  }
-	|	BUILTIN_FUNCTION '(' ALL scalar_exp ')'				{ $$ = new scalar.FunctionRefWithScalarExpr($1, $4, true); }
-	|	BUILTIN_FUNCTION '(' scalar_exp ')'					{ $$ = new scalar.FunctionRefWithScalarExpr($1, $3); }
+		BUILTIN_FUNCTION '(' function_selection ')'			{ $$ = new scalar.FunctionInvocation($1, $3); }
 	;
 
 
@@ -647,14 +652,8 @@ rollback_statement:
 		ROLLBACK opt_work	{ $$ = new transaction.RollbackStatement(); }
 	;
 
-opt_all_distinct:
-		/* empty */
-	|	ALL
-	|	DISTINCT
-	;
-
 select_into_statement:
-    SELECT opt_all_distinct selection
+    SELECT selection
     INTO table_ref
 	FROM dynamic_table_ref_commalist					
 	opt_join_ref_list
@@ -663,19 +662,19 @@ select_into_statement:
 	opt_having_clause
 	opt_order_by_clause	
 	{ 
-		$$ = new select.WritableSelectQuery(new select.SingleSelectQuery($3, $7, $8, $9, $10, $2), $5, $12);
+		$$ = new select.WritableSelectQuery(new select.SingleSelectQuery($2, $6, $7, $8, $9, $10), $4, $11);
 	}
     ;
 
 select_statement:
-    SELECT opt_all_distinct selection
+    SELECT selection
 	FROM dynamic_table_ref_commalist					
 	opt_join_ref_list
 	opt_where_clause
 	opt_group_by_clause
-	opt_having_clause					
+	opt_having_clause
 	{ 
-		$$ = new select.SingleSelectQuery($3, $5, $6, $7, $8, $2); 
+		$$ = new select.SingleSelectQuery($2, $4, $5, $6, $7, $8); 
 	}			
     ;
 
@@ -738,9 +737,15 @@ select_term:
 	;
 
 
+opt_distinct:
+		/* empty */										{ $$ = false }
+	|	ALL												{ $$ = false }
+	|	DISTINCT										{ $$ = true }
+	;
+
 selection:
-		selection_commalist									{ $$ = new select.ScalarSelection($1); }
-	|	ASTERISK											{ $$ = new select.AllSelection(); }
+		opt_distinct selection_commalist				{ $$ = new select.ScalarSelection($2, $1); }
+	|	opt_distinct ASTERISK							{ $$ = new select.AllSelection($1); }
 	;
 
 
@@ -762,7 +767,7 @@ opt_join_on_clause:
 	;
 
 join_ref:
-	join_type JOIN dynamic_table_ref opt_join_on_clause		{ $$ = new select.JoinRef($1, $2, $3); }
+	join_type JOIN dynamic_table_ref opt_join_on_clause		{ $$ = new select.JoinRef($1, $3, $4); }
 	;
 
 join_ref_list:

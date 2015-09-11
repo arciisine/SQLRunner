@@ -1,7 +1,7 @@
 import {ASTNode} from '../index';
 import {Atom} from '../common/literal';
-import {NamedColumnRef} from '../common/ref';
-import {SelectQuery} from '../query/select';
+import {NamedColumnRef, ColumnRef} from '../common/ref';
+import {SelectQuery, AllSelection, SingleScalarSelection} from '../query/select';
 
 export enum BinaryExprOperator {
 	PLUS = <any>"+", 
@@ -59,9 +59,23 @@ export class NamedColumnRefExpr extends ScalarExpr {
 	}
 }
 
-export class FunctionRefExpr extends ScalarExpr {
-	constructor(public name:string) {
+
+export class FunctionInvocation extends ASTNode {
+	constructor(public name:string, public selection:AllSelection|SingleScalarSelection) {
+		super();
+	}
+	toString() {
+		return `${this.name}(${this.selection})`;
+	}
+}
+
+
+export class FunctionExpr extends ScalarExpr {
+	constructor(public invocation:FunctionInvocation) {
 		super();		
+	}
+	toString() {
+		return this.invocation.toString();
 	}
 }
 
@@ -71,32 +85,6 @@ export class QueryExpr extends ScalarExpr {
 	}
 	toString() {
 		return this.query.toString();
-	}
-}
-
-export class FunctionRefWithScalarExpr extends FunctionRefExpr {
-	constructor(name:string, public expr:ScalarExpr, all:boolean = false) {
-		super(name);
-	}
-	toString() {
-		return `${this.name}(${this.expr})`;
-	}
-}
-
-export class FunctionRefByColumnExpr extends FunctionRefExpr {}
-
-export class FunctionRefWithAllColumnExpr extends FunctionRefExpr {
-	toString() {
-		return `${this.name}(*)`;
-	}
-}
-
-export class FunctionRefWithDistinctColumnExpr extends FunctionRefExpr {
-	constructor(name:string, public column:NamedColumnRefExpr) {
-		super(name);
-	}
-	toString() {
-		return `${this.name}(${this.column})`;
 	}
 }
 

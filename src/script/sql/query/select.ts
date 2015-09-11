@@ -18,7 +18,7 @@ export enum BinaryQueryOperator {
 	EXCEPT = <any>"EXCEPT"
 }
 
-export class QueryScalarExpr extends ASTNode {
+export class ScalarSelectionExpr extends ASTNode {
 	constructor(
 		public expr:ScalarExpr, 
 		public alias:string = null
@@ -30,18 +30,37 @@ export class QueryScalarExpr extends ASTNode {
 	}
 }
 
-export class QuerySelection extends ASTNode {}
-export class AllSelection extends QuerySelection {
+export class QuerySelection extends ASTNode {
+	constructor(public distinct:boolean = false) {
+		super();
+	}
 	toString() {
-		return '*';
+		return this.distinct ? 'DISTINCT ' : ''
+	}
+}
+export class AllSelection extends QuerySelection {
+	constructor(distinct:boolean = false) {
+		super(distinct);
+	}
+	toString() {
+		return super.toString() + '*';
 	}
 }
 export class ScalarSelection extends QuerySelection {
-	constructor(public columns:Array<QueryScalarExpr>) {
-		super()
+	constructor(public columns:Array<ScalarSelectionExpr>, distinct:boolean = false) {
+		super(distinct)
 	}
 	toString() {
-		return  util.join(this.columns, ',');
+		return  super.toString() + util.join(this.columns, ',');
+	}
+}
+
+export class SingleScalarSelection extends QuerySelection {
+	constructor(public column:ScalarSelectionExpr, distinct:boolean = false) {
+		super(distinct)
+	}
+	toString() {
+		return  super.toString() + this.column.toString();
 	}
 }
 
@@ -101,18 +120,20 @@ export class SingleSelectQuery extends SelectQuery {
 		
 		public where:SearchCondition,
 		public groupBy:Array<ColumnRef>,
-		public having:SearchCondition,
-		public distinct:boolean = false
+		public having:SearchCondition
 	) {
 		super()
 	}
 	toString(postSelection:string ='') {
-		`SELECT ${this.distinct ? ' DISTINCT' : ''}${this.selection} ${postSelection || ''} 
-		FROM ${util.join(this.from, ',')} 
-		${util.join(this.joins, '\n')}
-		${this.where ? `WHERE ${this.where}` : ''}
-		${this.groupBy ? `GROUP BY ${util.join(this.groupBy, ',')}` : ''}
-		${this.having ? `HAVING ${this.having}` : ''}`		
+		return util.join([
+			`SELECT ${this.selection}`,
+			postSelection || null,
+			`FROM ${util.join(this.from, ',')}`,
+			util.join(this.joins, '\n') || null,
+			this.where ? `WHERE ${this.where}` : null,
+			this.groupBy ? `GROUP BY ${util.join(this.groupBy, ',')}` : null,
+			this.having ? `HAVING ${this.having}` : null
+		], '\n\t')
 	}
 }
 
