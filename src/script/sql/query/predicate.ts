@@ -4,9 +4,12 @@ import {ColumnRef} from '../common/ref';
 
 import {SearchCondition} from './search-condition'
 import {SelectQuery} from './select';
+import * as util from '../util';
 
-export const enum QueryComparisonOperator {
-	ANY, ALL, SOME
+export enum QueryComparisonOperator {
+	ANY = <any>"ANY",
+	ALL = <any>"ALL", 
+	SOME = <any>"SOME"
 }
 
 export class Predicate extends SearchCondition {}
@@ -19,6 +22,9 @@ export class ComparisonPredicate extends Predicate {
 	) {
 		super()
 	}
+	toString() {
+		return `${this.left} ${this.comparison} ${this.right}`;
+	}
 }
 
 export class BetweenPredicate extends Predicate {
@@ -29,6 +35,9 @@ export class BetweenPredicate extends Predicate {
 		public inverse:boolean = false
 	) {
 		super()
+	}
+	toString() {
+		return `${this.source} ${this.inverse ? 'NOT ':''}BETWEEN ${this.lower} AND ${this.upper}`;
 	}
 }
 
@@ -41,6 +50,10 @@ export class LikePredicate extends Predicate {
 	) {
 		super()
 	}
+	toString() {
+		return `${this.left} ${this.inverse ? 'NOT ':''}LIKE ${this.right}${this.escape?` ESCAPE ${this.escape}` : ''}`;
+	}
+
 }
 
 export class NullCheckPredicate extends Predicate {
@@ -49,6 +62,9 @@ export class NullCheckPredicate extends Predicate {
 		public inverse:boolean = false
 	) {
 		super()
+	}
+	toString() {
+		return `${this.column} IS${this.inverse?' NOT':''} NULL`;
 	}
 }
 
@@ -60,15 +76,21 @@ export class InQueryPredicate extends Predicate {
 	) {
 		super()
 	}
+	toString() {
+		return `${this.left} IN${this.inverse?' NOT':''} (${this.right})`;
+	}
 }
 
 export class InArrayPredicate extends Predicate {
 	constructor(
 		public left:ScalarExpr,
 		public right:Array<Literal>,
-		public inverse:boolean
+		public inverse:boolean = false
 	) {
 		super()
+	}
+	toString() {
+		return `${this.left} IN${this.inverse?' NOT':''} ${util.join(this.right, ',', '(', ')')}`;
 	}
 }
 
@@ -81,12 +103,19 @@ export class QueryComparisonPredicate extends Predicate {
 	) {
 		super()
 	}
+	toString() {
+		return `${this.left} ${this.comparison} ${this.mode} (${this.right}`
+	}
 }
 
 export class ExistenceCheckPredicate extends Predicate {
 	constructor(
-		public query:SelectQuery
+		public query:SelectQuery,
+		public inverse:boolean = false
 	) {
 		super()
+	}
+	toString() {
+		return `${this.inverse ? 'NOT ':''}EXISTS (${this.query})`
 	}
 }

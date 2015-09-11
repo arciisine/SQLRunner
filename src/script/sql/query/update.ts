@@ -4,6 +4,7 @@ import {Null} from '../common/literal';
 import {ScalarExpr} from '../common/scalar';
 import {JoinRef} from './select';
 import {SearchCondition} from './search-condition';
+import * as util from '../util';
 
 export type NullableScalar = ScalarExpr|Null;
 
@@ -13,6 +14,9 @@ export class Assignment extends ASTNode {
 		public value:NullableScalar
 	) {
 		super();
+	}
+	toString() {
+		return `${this.column} = ${this.value}`
 	}
 }
 
@@ -24,5 +28,8 @@ export class UpdateQuery extends ManipulativeStatement {
 		public where:SearchCondition
 	) {
 		super();
+	}
+	toString() {
+		return `UPDATE ${this.table} ${util.join(this.joins, '')} SET ${util.join(this.assignments, ',')} ${this.where}`;
 	}
 }

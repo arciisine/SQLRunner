@@ -3,6 +3,7 @@ import {TableRef,ParameterRef} from '../common/ref';
 import {SortableSelectQuery, JoinRef} from '../query/select';
 import {OrderBy} from '../query/orderby';
 import {Assignment} from '../query/update';
+import * as util from '../util';
 
 export class CursorDefinitionStatement extends Statement {
 	constructor(
@@ -10,6 +11,10 @@ export class CursorDefinitionStatement extends Statement {
 		public select:SortableSelectQuery
 	) {
 		super();
+	}
+	
+	toString() {
+		return `DECLARE CURSOR ${this.name} FOR ${this.select}`;
 	}
 }
 
@@ -20,6 +25,10 @@ export class DeleteCursorQuery extends ManipulativeStatement {
 		public cursor:string
 	) {
 		super()
+	}
+	
+	toString() {
+		return `DELETE FROM ${this.from.toString()} ${util.join(this.joins)} WHERE CURRENT OF ${this.cursor}`
 	}
 }
 
@@ -32,12 +41,17 @@ export class UpdateCursorQuery extends ManipulativeStatement {
 	) {
 		super();
 	}
+	
+	toString() {
+		return `UPDATE ${this.table} ${util.join(this.joins)} SET ${util.join(this.assignments, ',')} WHERE CURRENT OF ${this.cursor}`
+	}
 }
 
 export class CursorStatement extends ManipulativeStatement {
 	constructor(public cursor:string) {
 		super()
 	}
+	toString() { return this.cursor; }
 }
 
 export class FetchStatement extends CursorStatement {
@@ -47,7 +61,14 @@ export class FetchStatement extends CursorStatement {
 	{
 		super(cursor)
 	}
+	toString() {
+		return `FETCH ${super.toString()} INTO ${util.join(this.parameters, ',')}`
+	}
 }
 
-export class OpenStatement extends CursorStatement {}
-export class CloseStatement extends CursorStatement {}
+export class OpenStatement extends CursorStatement {
+	toString() { return `OPEN ${super.toString()}`; }
+}
+export class CloseStatement extends CursorStatement {
+	toString() { return `CLOSE ${super.toString()}`; }
+}

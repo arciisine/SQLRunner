@@ -340,7 +340,7 @@ predicate:
 	|	scalar_exp opt_not IN subquery								{ $$ = new pred.InQueryPredicate($1, $4, !!$2); }	
 	|	scalar_exp opt_not IN '(' atom_commalist ')'				 { $$ = new pred.InArrayPredicate($1, $5, !!$2); }
 	|	scalar_exp comparison any_all_some subquery					{ $$ = new pred.QueryComparisonPredicate($1, $2, $3, $4); }
-	|	EXISTS subquery												{ $$ = new pred.ExistenceCheckPredicate($2); }
+	|	opt_not EXISTS subquery												{ $$ = new pred.ExistenceCheckPredicate($3, $1); }
 	;
 
 subquery:

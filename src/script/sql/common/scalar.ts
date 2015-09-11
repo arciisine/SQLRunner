@@ -3,18 +3,25 @@ import {Atom} from '../common/literal';
 import {NamedColumnRef} from '../common/ref';
 import {SelectQuery} from '../query/select';
 
-export const enum BinaryExprOperator {
-	PLUS, MINUS, MULTIPLY, DIVIDE
+export enum BinaryExprOperator {
+	PLUS = <any>"+", 
+	MINUS = <any>"-", 
+	MULTIPLY = <any>"*", 
+	DIVIDE = <any>"/"
 }
 
-export const enum UnaryExprOperator {
-	PLUS, MINUS
+export enum UnaryExprOperator {
+	PLUS = <any>"", 
+	MINUS = <any>"-"
 }
 
-export const enum ComparisonExprOperator {
-	EQUAL, NOT_EQUAL, 
-	LESS_THAN, GREATER_THAN,
-	LESS_THAN_EQUAL, GREATER_THAN_EQUAL 
+export enum ComparisonExprOperator {
+	EQUAL = <any>"=", 
+	NOT_EQUAL = <any>"<>", 
+	LESS_THAN = <any>"<", 
+	GREATER_THAN = <any>">",
+	LESS_THAN_EQUAL = <any>"<=", 
+	GREATER_THAN_EQUAL = <any>">=" 
 }
 
 export class ScalarExpr extends ASTNode {}
@@ -22,6 +29,10 @@ export class ScalarExpr extends ASTNode {}
 export class AtomExpr extends ScalarExpr {
 	constructor(public value:Atom) {
 		super();
+	}
+	
+	toString() {
+		return this.value.toString();
 	}
 }
 
@@ -34,11 +45,17 @@ export class BinaryExpr extends ScalarExpr {
 		super()
 	}
 	
+	toString() {
+		return `(${this.left} ${this.op} ${this.right})`
+	}
 }
 
 export class NamedColumnRefExpr extends ScalarExpr {
 	constructor(public column:NamedColumnRef) {
 		super();
+	}
+	toString() {
+		return this.column.toString();
 	}
 }
 
@@ -52,26 +69,42 @@ export class QueryExpr extends ScalarExpr {
 	constructor(public query:SelectQuery) {
 		super()		
 	}
+	toString() {
+		return this.query.toString();
+	}
 }
 
 export class FunctionRefWithScalarExpr extends FunctionRefExpr {
 	constructor(name:string, public expr:ScalarExpr, all:boolean = false) {
 		super(name);
 	}
+	toString() {
+		return `${this.name}(${this.expr})`;
+	}
 }
 
 export class FunctionRefByColumnExpr extends FunctionRefExpr {}
 
-export class FunctionRefWithAllColumnExpr extends FunctionRefExpr {}
+export class FunctionRefWithAllColumnExpr extends FunctionRefExpr {
+	toString() {
+		return `${this.name}(*)`;
+	}
+}
 
 export class FunctionRefWithDistinctColumnExpr extends FunctionRefExpr {
 	constructor(name:string, public column:NamedColumnRefExpr) {
 		super(name);
+	}
+	toString() {
+		return `${this.name}(${this.column})`;
 	}
 }
 
 export class UnaryExpr extends ScalarExpr {
 	constructor(public source:ScalarExpr, public op:UnaryExprOperator) {
 		super();
+	}
+	toString() {
+		return `${this.op}${this.source}`;
 	}
 }

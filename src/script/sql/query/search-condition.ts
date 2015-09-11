@@ -2,8 +2,9 @@ import {ASTNode} from '../index';
 
 export class SearchCondition extends ASTNode {}
 
-export const enum SearchConditionOperator {
-	AND, OR
+export enum SearchConditionOperator {
+	AND = <any>"AND", 
+	OR = <any>"OR"
 }
 
 export class BinarySearchCondition extends SearchCondition {
@@ -14,6 +15,9 @@ export class BinarySearchCondition extends SearchCondition {
 	) {
 		super()
 	}
+	toString() {
+		return `(${this.left} ${this.op} ${this.right})`
+	}
 }
 
 export class NotSearchCondition extends SearchCondition {
@@ -21,5 +25,8 @@ export class NotSearchCondition extends SearchCondition {
 		public 	condition:SearchCondition
 	) {
 		super()
+	}
+	toString() {
+		return `(NOT ${this.condition})`
 	}
 }

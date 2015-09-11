@@ -1,28 +1,49 @@
 import {ASTNode} from '../index';
 import {ParameterRef} from '../common/ref';
 
-export class Null extends ASTNode {}
+export class Null extends ASTNode {
+	toString() {
+		return 'NULL'
+	}
+}
 export class Atom extends ASTNode {}
-export class Literal extends Atom {}
+export class Literal extends Atom {
+	static build(value:any):Literal {
+		if (typeof value === 'string') {
+			return new StringLiteral(value)
+		} else if (typeof value === 'number') {
+			return new NumberLiteral(value);
+		}
+		return null;
+	}
+}
 export type NullableLiteral = Literal|Null;
 export type NullableAtom = Atom|Null;
-
 
 export class Parameter extends Atom {
 	constructor(public parameter:ParameterRef) {
 		super()
     }
+	toString() {
+		return `:${this.parameter}`
+	}
 }
 
 export class StringLiteral extends Literal {
 	constructor(public value:string) {
 		super()
 	}
+	toString() {
+		return `'${this.value.replace(/'/g, "''")}'`;
+	}
 }
 
 export class NumberLiteral extends Literal {
 	constructor(public value:number) {
 		super()
+	}
+	toString() {
+		return this.value.toString()
 	}
 }
 
@@ -34,7 +55,10 @@ export class ScientificNumberLiteral extends Literal {
 		return ret;
 	}
 	
-	constructor(public value:number, precision:number) {
+	constructor(public value:number, public precision:number) {
 		super()
+	}
+	toString() {
+		return `${this.value}E${this.precision}`;
 	}
 }

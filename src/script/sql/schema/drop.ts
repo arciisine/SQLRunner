@@ -11,6 +11,9 @@ export class DropTableSchema extends DropSchema {
 	) {
 		super();
 	}
+	toString() {
+		return `DROP TABLE ${this.name}`;
+	}
 }
 
 export class DropViewSchema extends DropSchema {
@@ -19,6 +22,9 @@ export class DropViewSchema extends DropSchema {
 	) {
 		super();
 	}
+	toString() {
+		return `DROP VIEW ${this.name}`;
+	}
 }
 
 export class DropPrivilegeSchema extends DropSchema {
@@ -26,5 +32,8 @@ export class DropPrivilegeSchema extends DropSchema {
 		public granted:PrivilegeSchema
 	) {
 		super();
+	}
+	toString() {
+		return `REVOKE ${this.granted}`;
 	}
 }

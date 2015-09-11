@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<title>SQL Manager</title>
-		<script src="node_modules/systemjs/dist/system.js"></script>
+		<script src="node_modules/systemjs/dist/system.src.js"></script>
 		<script>
 			System.defaultJSExtensions = true;
 			System.config({
@@ -9,13 +9,21 @@
   			});
 			System.config({
 				map : {
-					sqljs : 'node_modules/sql.js/js/sql.js',
-					zipjs : 'node_modules/zip.js/WebContent/zip.js'		
+					sqljs : '/node_modules/sql.js/js/sql',
+					zipjs : '/node_modules/zip.js/WebContent/zip',
+					papaparse : '/node_modules/papaparse/papaparse'		
 				}
 			});
-			System.import('app.js').then(function(start) {
-				start.app();
-			});
+			Promise
+				.all(['app', 'zipjs', 'papaparse', 'sqljs'].map(function(i) { return System.import(i); }))
+				.then(function(data) {
+					var Main = data[0];
+					var zipjs = data[1];
+					window.Papa = data[2];
+					window.sql = data[3];
+					zipjs.workerScriptsPath = '/node_modules/zip.js/WebContent/';
+					Main.start(zipjs);
+				});
 		</script>
 	</head>
 	<body>
