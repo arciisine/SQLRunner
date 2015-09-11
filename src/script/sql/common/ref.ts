@@ -1,4 +1,5 @@
 import {ASTNode} from '../index';
+import * as util from '../util';
 
 export class Ref extends ASTNode {}
 
@@ -14,14 +15,14 @@ export class NamedColumnRef extends ColumnRef {
 		if (name.indexOf('.') > 0) {
 			let parts = name.split('.');
 			switch (parts.length) {
-				case 2: [table, name] = parts
-				case 3: [tablespace, table, name] = parts
+				case 2: [this.table, this.name] = parts
+				case 3: [this.tablespace, this.table, this.name] = parts
 			}	
 		}
 	}
 	
 	toString() {
-		return [this.tablespace, this.table, this.name].filter(x => !!x).join('.');
+		return util.join([this.tablespace, this.table, this.name].filter(x => !!x), '"."', '"', '"');
 	}
 }
 
@@ -47,14 +48,6 @@ export class ParameterRef extends Ref {
 }
 
 export class TableRef extends Ref {
-	static build(ref:string) {
-		let parts = ref.split('.');
-		switch (parts.length) {
-			case 1: return new TableRef(parts[0]);
-			case 2: return new TableRef(parts[1], parts[0]);
-		}
-		return null
-	}
 	constructor(
 		public name:string, 
 		public tablespace:string = ""
@@ -62,11 +55,11 @@ export class TableRef extends Ref {
 		super();
 		if (name.indexOf('.') > 0) {
 			let parts = name.split('.');
-			[tablespace, name] = parts
+			[this.tablespace, this.name] = parts
 		}		
 	}
 	
 	toString() {
-		return [this.tablespace, this.name].filter(x => !!x).join('.');
+		return util.join([this.tablespace, this.name].filter(x => !!x), '"."', '"', '"');
 	}
 }

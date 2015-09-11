@@ -25,15 +25,22 @@ export class AtomValues extends InsertValues {
 
 export class InsertQuery extends Query {
 	static build(table:string, values:Array<any>, columns?:Array<string>) {		
-		return new InsertQuery(TableRef.build(table), columns.map(c => new NamedColumnRef(c)), values.map(Literal.build));
+		return new InsertQuery(table, columns.map(c => new NamedColumnRef(c)), new AtomValues(values.map(Literal.build)));
 	}
 	
+	public table:TableRef;
+	
 	constructor (
-		public table:TableRef,
+		table:TableRef|string,
 		public columns:Array<NamedColumnRef>,
 		public values:InsertValues
 	) {
 		super()
+		if (typeof table === 'string') {
+			this.table = new TableRef(table)
+		} else {
+			this.table = table;
+		}
 	}
 	
 	toString() {

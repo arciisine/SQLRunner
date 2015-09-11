@@ -57,11 +57,18 @@ export class CheckTableConstraint extends TableConstraint {
 }
 
 export class ForeignKeyConstraint extends ColumnConstraint {
+	public table:TableRef;
+	
 	constructor(
-		public table:TableRef,
+		table:TableRef|string,
 		public columns:Array<string> = null
 	) {
 		super()
+		if (typeof table === 'string') {
+			this.table = new TableRef(table);
+		} else {
+			this.table = table;
+		}
 	}
 	
 	toString() {

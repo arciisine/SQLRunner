@@ -34,12 +34,12 @@ export class SizedColumnType extends ColumnType {
 		super()
 	}
 	toString() {
-		return `(${this.size})`;
+		return this.size ? `(${this.size})` : '';
 	}
 }
 
 export class TemporalColumnType extends SizedColumnType {
-	constructor(size:number, public timezone:boolean = false) {
+	constructor(size:number = null, public timezone:boolean = false) {
 		super(size)
 	}
 	toString() {
@@ -90,7 +90,7 @@ export class CharacterColumnType extends VariableSizedColumnType {
 	}	
 }
 export class DecimalColumnType extends SizedColumnType {
-	constructor(size:number, public precision:number) {
+	constructor(size:number = null, public precision:number = null) {
 		super(size);
 	}
 	toString() {
@@ -99,7 +99,7 @@ export class DecimalColumnType extends SizedColumnType {
 }
 
 export class NumericColumnType extends SizedColumnType {
-	constructor(size:number, public precision:number) {
+	constructor(size:number = null, public precision:number = null) {
 		super(size);
 	}
 	toString() {

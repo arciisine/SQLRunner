@@ -18,7 +18,11 @@ export enum BinaryQueryOperator {
 	EXCEPT = <any>"EXCEPT"
 }
 
-export class ScalarSelectionExpr extends ASTNode {
+export class SelectionExpr extends ASTNode {
+	
+}
+
+export class ScalarSelectionExpr extends SelectionExpr {
 	constructor(
 		public expr:ScalarExpr, 
 		public alias:string = null
@@ -27,6 +31,17 @@ export class ScalarSelectionExpr extends ASTNode {
 	}
 	toString() {
 		return `${this.expr}${this.alias ? ' AS ' + this.alias : ''}`;
+	}
+}
+
+export class TableAllSelectionExpr extends ScalarSelectionExpr {
+	constructor(
+		public name:string
+	) {
+		super(null, null);
+	}
+	toString() {
+		return `"${this.name}".*`;
 	}
 }
 

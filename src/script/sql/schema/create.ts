@@ -21,7 +21,7 @@ export class ColumnSchema extends ASTNode {
 		super()
 	}
 	toString() {
-		return `${this.name} ${this.type} ${util.join(this.constraints)}`
+		return `"${this.name}" ${this.type} ${util.join(this.constraints)}`
 	}
 }
 
@@ -30,12 +30,19 @@ export class CreateSchema extends Schema {}
 export class TableSchema extends CreateSchema {
 	public columns:Array<ColumnSchema>;
 	public constraints:Array<TableConstraint>;
+	public name:TableRef;
 
 	constructor(
-		public name:TableRef,
+		name:TableRef|string,
 		created:Array<ColumnSchema|TableConstraint>
 	) {
 		super();
+		if (typeof name === 'string') {
+			this.name = new TableRef(name);
+		} else {
+			this.name = name; 
+		}
+		
 		this.columns = <Array<ColumnSchema>>created.filter(id => id instanceof ColumnSchema);
 		this.constraints = created.filter(id => id instanceof TableConstraint);
 	}

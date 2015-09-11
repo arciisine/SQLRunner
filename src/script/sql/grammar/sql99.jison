@@ -1,6 +1,7 @@
 /* Derived from http://yaxx.googlecode.com/svn/trunk/sql/scn2.l */
 
 %lex
+%options case-insensitive
 
 %%
 "ALL"                                 return 'ALL';
@@ -231,23 +232,28 @@ literal:
 	|	scientific_number_literal
 	;	
 	
-column:		IDENTIFIER
+identifier:
+		IDENTIFIER								{ $$ = $1 }
+	|	DOUBLE_QUOTE IDENTIFIER DOUBLE_QUOTE	{ $$ = $2 }
+	;
+	
+column:		identifier
 	;
 
-cursor:		IDENTIFIER
+cursor:		identifier
 	;
 
 parameter:
 		PARAMETER	/* :name handled in parser */
 	;
 
-range_variable:	IDENTIFIER
+range_variable:	identifier
 	;
 
-userName:		IDENTIFIER
+userName:		identifier
 	;
 	
-alias:		IDENTIFIER
+alias:		identifier
 	;
 
 		/* data types */
@@ -369,6 +375,7 @@ selection_scalar:
 		scalar_exp									{ $$ = new select.ScalarSelectionExpr($1); }
 	|	scalar_exp alias							{ $$ = new select.ScalarSelectionExpr($1, $2); }
 	|	scalar_exp AS alias							{ $$ = new select.ScalarSelectionExpr($1, $3); }
+	|	identifier PERIOD ASTERISK					{ $$ = new select.TableAllSelectionExpr($1); }
 	;
 
 selection_commalist:
@@ -402,14 +409,14 @@ function_ref:
 	/* miscellaneous */
 
 table:
-		IDENTIFIER										{ $$ = new ref.TableRef($1, null); }
-	|	IDENTIFIER PERIOD IDENTIFIER					{ $$ = new ref.TableRef($2, $1); }
+		identifier										{ $$ = new ref.TableRef($1, null); }
+	|	identifier PERIOD identifier					{ $$ = new ref.TableRef($2, $1); }
 	;
 
 named_column_ref:
-		IDENTIFIER										{ $$ = new ref.NamedColumnRef($1); } 						
-	|	IDENTIFIER PERIOD IDENTIFIER					{ $$ = new ref.NamedColumnRef($3, $1); }
-	|	IDENTIFIER PERIOD IDENTIFIER PERIOD IDENTIFIER  { $$ = new ref.NamedColumnRef($5, $3, $1); }
+		identifier										{ $$ = new ref.NamedColumnRef($1); } 						
+	|	identifier PERIOD identifier					{ $$ = new ref.NamedColumnRef($3, $1); }
+	|	identifier PERIOD identifier PERIOD identifier  { $$ = new ref.NamedColumnRef($5, $3, $1); }
 	;
 
 
@@ -848,7 +855,7 @@ when_stmt:
 	;
 
 when_action:	
-		GOTO IDENTIFIER											{ $$ = new when.GotoWhenAction($2); }
+		GOTO identifier											{ $$ = new when.GotoWhenAction($2); }
 	|	CONTINUE												{ $$ = new when.ContinueWhenAction(); }
 	;
 	

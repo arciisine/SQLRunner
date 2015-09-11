@@ -14,7 +14,7 @@ export class Literal extends Atom {
 		} else if (typeof value === 'number') {
 			return new NumberLiteral(value);
 		}
-		return null;
+		return new Null();
 	}
 }
 export type NullableLiteral = Literal|Null;
