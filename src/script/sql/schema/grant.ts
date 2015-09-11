@@ -1,25 +1,36 @@
 import {ASTNode} from '../index';
 import {TableRef} from '../common/ref';
 import {CreateSchema} from './create';
+import * as util from '../util';
 
-export const enum BasicQueryGrantOperationType {
-	SELECT, INSERT, DELETE
+export enum BasicQueryGrantOperationType {
+	SELECT = <any>"SELECT", 
+	INSERT = <any>"INSERT", 
+	DELETE = <any>"DELETE"
 }
 
-export const enum ComplexQueryGrantOperationType {
-	UPDATE, REFERENCES
+export enum ComplexQueryGrantOperationType {
+	UPDATE = <any>"UPDATE",
+	REFERENCES = <any>"REFERENCES"
 }
 
 export class Grantee extends ASTNode {}
 export class GrantOperation extends ASTNode {}
 
-export class PublicGrantee extends Grantee {}
+export class PublicGrantee extends Grantee {
+	toString() {
+		return 'PUBLIC';
+	}
+}
 
 export class UserGrantee extends Grantee {
 	constructor(
 		public name:string
 	) {
 		super()
+	}
+	toString() {
+		return `'${this.name}'`;
 	}
 }
 
@@ -31,6 +42,9 @@ export class BasicQueryGrantOperation extends GrantOperation {
 	) {
 		super()
 	}
+	toString() {
+		return this.type.toString();
+	}
 }
 
 export class ComplexQueryGrantOperation extends GrantOperation {
@@ -39,6 +53,9 @@ export class ComplexQueryGrantOperation extends GrantOperation {
 		public columns:Array<string>
 	) {
 		super()
+	}
+	toString() {
+		return `${this.type}${util.join(this.columns, ',')}`;
 	}
 }
 
@@ -50,5 +67,8 @@ export class PrivilegeSchema extends CreateSchema {
 		public withGrant:boolean = false
 	) {
 		super();
+	}
+	toString() {
+		return `${util.join(this.operations,',')} ON ${this.table} TO ${util.join(this.grantees,',')} ${this.withGrant? ' WITH GRANT OPTION':''}`
 	}
 }
