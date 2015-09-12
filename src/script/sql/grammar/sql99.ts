@@ -111,7 +111,7 @@ case 7: case 62: case 99: case 128: case 162: case 178: case 185: case 223: case
  this.$ = $$[$0-2]; this.$ = this.$.concat([$$[$0]]); 
 break;
 case 12:
- this.$ = new literal.StringLiteral($$[$0].substring(1, $$[$0].length-1); 
+ this.$ = new literal.StringLiteral($$[$0].substring(1, $$[$0].length-1)); 
 break;
 case 13:
  this.$ = new literal.NumberLiteral(parseFloat($$[$0]));  

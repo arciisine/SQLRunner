@@ -222,7 +222,7 @@ stmt:
 
 
 string_literal:
-		STRING_LITERAL 					{ $$ = new literal.StringLiteral($1.substring(1, $1.length-1); }
+		STRING_LITERAL 					{ $$ = new literal.StringLiteral($1.substring(1, $1.length-1)); }
 	;
 	
 number_literal:

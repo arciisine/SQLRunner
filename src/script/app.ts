@@ -67,7 +67,7 @@ export class AppComponent {
   }
   
   sortColumn(event) {
-    if (!(this.select instanceof select.SortableSelectQuery) {
+    if (!(this.select instanceof select.SortableSelectQuery)) {
       this.select = new select.SortableSelectQuery(this.select, [])
     }
     
