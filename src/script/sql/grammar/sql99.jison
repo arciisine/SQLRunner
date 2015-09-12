@@ -4,6 +4,7 @@
 %options case-insensitive
 
 %%
+\"[A-Za-z][A-Za-z0-9_]*\"			  return 'IDENTIFIER';
 "ACTION"							  return 'ACTION';
 "ALL"                                 return 'ALL';
 "AND"                                 return 'AND';
@@ -221,7 +222,7 @@ stmt:
 
 
 string_literal:
-		STRING_LITERAL 					{ $$ = new literal.StringLiteral($1); }
+		STRING_LITERAL 					{ $$ = new literal.StringLiteral($1.substring(1, $1.length-1); }
 	;
 	
 number_literal:
@@ -234,7 +235,7 @@ scientific_number_literal:
 
 	/* the various things you can name */
 literal:
-		scientific_literal					
+		string_literal					
 	|	number_literal
 	|	scientific_number_literal
 	;	
@@ -348,7 +349,7 @@ any_all_some:
 
 predicate:
 		scalar_exp comparison scalar_exp							{ $$ = new pred.ComparisonPredicate($1, $2, $3); }
-	|	scalar_exp opt_not BETWEEN scalar_exp AND scalar_exp 		{ $$ = new pred.BetweenPredicate($1, $4, $5, !!$2); }
+	|	scalar_exp opt_not BETWEEN scalar_exp AND scalar_exp 		{ $$ = new pred.BetweenPredicate($1, $4, $6, !!$2); }
 	|	scalar_exp opt_not LIKE string_literal opt_escape 			{ $$ = new pred.LikePredicate($1, $4, $5, !!$2); }
 	|	named_column_ref IS opt_not NULLX							{ $$ = new pred.NullCheckPredicate($1, !!$3); }
 	|	scalar_exp opt_not IN subquery								{ $$ = new pred.InQueryPredicate($1, $4, !!$2); }	
@@ -366,10 +367,10 @@ subquery:
 	/* scalar expressions */
 
 scalar_exp:
-		scalar_exp PLUS scalar_exp					{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.PLUS, $2); }
-	|	scalar_exp MINUS scalar_exp					{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.MINUS, $2); }
-	|	scalar_exp ASTERISK scalar_exp				{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.MULTIPLY, $2); }
-	|	scalar_exp DIVIDE scalar_exp				{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.DIVIDE, $2); }
+		scalar_exp PLUS scalar_exp					{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.PLUS, $3); }
+	|	scalar_exp MINUS scalar_exp					{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.MINUS, $3); }
+	|	scalar_exp ASTERISK scalar_exp				{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.MULTIPLY, $3); }
+	|	scalar_exp DIVIDE scalar_exp				{ $$ = new scalar.BinaryExpr($1, scalar.BinaryExprOperator.DIVIDE, $3); }
 	|	PLUS scalar_exp %prec UMINUS				{ $$ = new scalar.UnaryExpr($1, scalar.UnaryExprOperator.PLUS); }
 	|	MINUS scalar_exp %prec UMINUS				{ $$ = new scalar.UnaryExpr($1, scalar.UnaryExprOperator.MINUS); }
 	|	atom										{ $$ = new scalar.AtomExpr($1); }

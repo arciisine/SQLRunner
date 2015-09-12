@@ -23,9 +23,9 @@ export class Database extends sql.Database {
 		return this.exec(query)
 	}
 	
-	loadZip(source:string, zipjs:zipjs.Zip) {
+	loadZip(source:string) {
 		let promise = new Promise((resolve, reject) => {
-			getFiles(zipjs, source, this.importCSV.bind(this), () => {
+			getZipFiles(source, this.importCSV.bind(this), () => {
 				this.complete();
 				resolve();
 			});
@@ -81,7 +81,7 @@ export class Database extends sql.Database {
 	}
 }
 
-function getFiles(zipjs:zipjs.Zip, url:string, onFile:(name:string, data:string) => void, done:() => void) {
+function getZipFiles(url:string, onFile:(name:string, data:string) => void, done:() => void) {
 	zipjs.createReader(new zipjs.HttpReader(url), function onRead(reader:zipjs.Reader):void {
 		// get all entries from the zip
 		reader.getEntries(function(entries:zipjs.Entry[]) {									

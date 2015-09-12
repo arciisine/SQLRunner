@@ -1,0 +1,10 @@
+<table class="table table-striped">
+	<thead>
+		<th *ng-for="#col of results.columns" (click)="setOrderBy(col)">{{col}}</th>
+	</thead>
+	<tbody>
+		<tr *ng-for="#row of results.values">
+			<td *ng-for="#cell of row">{{cell}}</td>
+		</tr>
+	</tbody>
+</table>

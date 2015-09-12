@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>SQL Manager</title>
 		<link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
-		<script src="/node_modules/systemjs/dist/system.src.js"></script>
+		<script src="/node_modules/systemjs/dist/system.js"></script>
 		<script>
 			System.defaultJSExtensions = true;
 			System.config({
@@ -12,24 +13,24 @@
 				map : {
 					sqljs : '/node_modules/sql.js/js/sql',
 					zipjs : '/node_modules/zip.js/WebContent/zip',
-					papaparse : '/node_modules/papaparse/papaparse',
+					papaparse : '/node_modules/papaparse/papaparse.min',
 					angular2: '/node_modules/angular2',
-					rx : '/node_modules/angular2/node_modules/rx/dist/rx',
-					reflect : '/node_modules/angular2/node_modules/reflect-metadata/temp/Reflect',
-					zonejs : '/node_modules/angular2/node_modules/zone.js/lib/zone'	
+					rx : '/node_modules/angular2/node_modules/rx/dist/rx.min',
+					Reflect : '/node_modules/angular2/node_modules/reflect-metadata/temp/Reflect',
+					zonejs : '/node_modules/angular2/node_modules/zone.js/dist/zone.min'	
 				}
 			});
 			Promise
-				.all(['zipjs', 'papaparse', 'sqljs', 'reflect', 'zonejs'].map(function(i) { return System.import(i); }))
+				.all(['zipjs', 'papaparse', 'sqljs','Reflect', 'zonejs'].map(function(i) { return System.import(i); }))
 				.then(function(data) {
-					var zipjs = data.shift();
+					window.zipjs = data.shift();
 					zipjs.workerScriptsPath = '/node_modules/zip.js/WebContent/';
 
 					window.Papa = data.shift();
 					window.sql = data.shift();
 					
 					System.import('app').then(function(Main) {
-						Main.start(zipjs);
+						Main.start();
 					})
 				});
 		</script>

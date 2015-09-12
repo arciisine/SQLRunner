@@ -129,11 +129,11 @@ export class SingleSelectQuery extends SelectQuery {
 	constructor(
 		public selection:QuerySelection,
 		public from:Array<FromTableRef>,
-		public joins:Array<JoinRef>,
+		public joins:Array<JoinRef>  = null,
 		
-		public where:SearchCondition,
-		public groupBy:Array<ColumnRef>,
-		public having:SearchCondition
+		public where:SearchCondition  = null,
+		public groupBy:Array<ColumnRef>  = null,
+		public having:SearchCondition = null
 	) {
 		super()
 	}

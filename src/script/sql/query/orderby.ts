@@ -6,8 +6,14 @@ export enum OrderByDirection {
 }
 
 export class OrderBy extends ASTNode {
-	constructor(public column:ColumnRef, public dir:OrderByDirection) {
+	public dir:OrderByDirection
+	constructor(public column:ColumnRef, dir:OrderByDirection|boolean) {
 		super()
+		if (typeof dir === 'boolean') {
+			this.dir = dir ? OrderByDirection.ASC : OrderByDirection.DESC
+		} else {
+			this.dir = dir
+		}
 	}
 	toString() {
 		return `${this.column}${this.dir? ' '+this.dir : ''}`
