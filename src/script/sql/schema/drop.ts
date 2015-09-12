@@ -3,7 +3,7 @@ import {ASTNode} from '../index';
 import {TableRef} from '../common/ref'; 
 import {PrivilegeSchema} from './grant';
 
-export class DropSchema extends ASTNode {}
+export abstract class DropSchema extends ASTNode {}
 
 export class DropTableSchema extends DropSchema {
 	constructor(

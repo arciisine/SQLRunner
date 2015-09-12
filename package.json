@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "connect-gzip": "^0.1.6",
     "gulp": "^3.9.0",
     "gulp-cached": "^1.1.0",
     "gulp-concat": "^2.6.0",
@@ -22,6 +23,8 @@
     "through2": "^2.0.0"
   },
   "dependencies": {
+    "angular2": "^2.0.0-alpha.37",
+    "bootstrap": "^3.3.5",
     "papaparse": "^4.1.2",
     "sql.js": "^0.2.21",
     "systemjs": "^0.18.17",

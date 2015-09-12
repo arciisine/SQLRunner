@@ -14,8 +14,8 @@ export enum ComplexQueryGrantOperationType {
 	REFERENCES = <any>"REFERENCES"
 }
 
-export class Grantee extends ASTNode {}
-export class GrantOperation extends ASTNode {}
+export abstract class Grantee extends ASTNode {}
+export abstract class GrantOperation extends ASTNode {}
 
 export class PublicGrantee extends Grantee {
 	toString() {

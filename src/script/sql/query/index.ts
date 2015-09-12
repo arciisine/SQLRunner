@@ -1,3 +1,3 @@
 import {ManipulativeStatement} from '../index';
 
-export class Query extends ManipulativeStatement {}
+export abstract class Query extends ManipulativeStatement {}

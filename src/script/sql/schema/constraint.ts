@@ -4,10 +4,36 @@ import {TableRef} from '../common/ref';
 import {SearchCondition} from '../query/search-condition';
 import * as util from '../util';
 
-export class Constraint extends ASTNode {}
-export class TableConstraint extends Constraint {}
-export class ColumnConstraint extends Constraint {}
-export class ColumnedTableConstraint extends TableConstraint {
+export enum ReferentialAction {
+	CASCADE = <any>'CASCADE', 
+	SET_NULL = <any>'SET NULL',
+	SET_DEFAULT = <any>'SET DEFAULT',
+	RESTRICT = <any>'RESTRICT',
+	NO_ACTION = <any>'NO ACTION'
+}
+
+export enum ReferentialQueryOperation {
+	UPDATE = <any>'UPDATE',
+	DELETE = <any>'DELETE'
+}
+
+export class ReferentialTriggerAction extends ASTNode {
+	constructor(
+		public operation:ReferentialQueryOperation,
+		public action:ReferentialAction
+	) {
+		super()
+	}
+	toString() {
+		return `ON ${this.operation} ${this.action}`
+	}
+}
+
+
+export abstract class Constraint extends ASTNode {}
+export abstract class TableConstraint extends Constraint {}
+export abstract class ColumnConstraint extends Constraint {}
+export abstract class ColumnedTableConstraint extends TableConstraint {
 	constructor(
 		public columns:Array<string>
 	) {
@@ -18,17 +44,17 @@ export class ColumnedTableConstraint extends TableConstraint {
 	}
 }
 
-
 export class ForeignKeyTableConstraint extends ColumnedTableConstraint {
 	constructor(
 		public sourceColumns:Array<string>,
 		public table:TableRef,
-		columns:Array<string> = null
+		columns:Array<string> = null,
+		public triggerActions:Array<ReferentialTriggerAction> = null
 	) {
 		super(columns);
 	}
 	toString() {
-		return `FOREIGN KEY ${util.join(this.sourceColumns, ',', '(' ,')')} REFERENCES ${this.table} ${super.toString()}`
+		return `FOREIGN KEY ${util.join(this.sourceColumns, ',', '(' ,')')} REFERENCES ${this.table} ${super.toString()} ${util.join(this.triggerActions)}`
 	}
 }
 
@@ -61,7 +87,8 @@ export class ForeignKeyConstraint extends ColumnConstraint {
 	
 	constructor(
 		table:TableRef|string,
-		public columns:Array<string> = null
+		public columns:Array<string> = null,
+		public triggerActions:Array<ReferentialTriggerAction> = null		
 	) {
 		super()
 		if (typeof table === 'string') {
@@ -72,7 +99,7 @@ export class ForeignKeyConstraint extends ColumnConstraint {
 	}
 	
 	toString() {
-		return `REFERENCES ${this.table}${util.join(this.columns, ',', '(' ,')')}`;
+		return `REFERENCES ${this.table}${util.join(this.columns, ',', '(' ,')')} ${util.join(this.triggerActions)}`;
 	}
 }
 export class NullConstraint extends ColumnConstraint {

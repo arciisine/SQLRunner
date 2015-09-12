@@ -1,9 +1,9 @@
 import {ASTNode} from '../index';
 import * as util from '../util';
 
-export class Ref extends ASTNode {}
+export abstract class Ref extends ASTNode {}
 
-export class ColumnRef extends Ref {}
+export abstract class ColumnRef extends Ref {}
 
 export class NamedColumnRef extends ColumnRef {
 	constructor(
@@ -22,7 +22,7 @@ export class NamedColumnRef extends ColumnRef {
 	}
 	
 	toString() {
-		return util.join([this.tablespace, this.table, this.name].filter(x => !!x), '"."', '"', '"');
+		return util.join([this.tablespace, this.table, this.name].filter(x => !!x).map(x => util.quoteOnKeyword(x)), '.');
 	}
 }
 
@@ -60,6 +60,6 @@ export class TableRef extends Ref {
 	}
 	
 	toString() {
-		return util.join([this.tablespace, this.name].filter(x => !!x), '"."', '"', '"');
+		return util.join([this.tablespace, this.name].filter(x => !!x).map(x => util.quoteOnKeyword(x)), '.');
 	}
 }

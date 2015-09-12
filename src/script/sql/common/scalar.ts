@@ -24,7 +24,7 @@ export enum ComparisonExprOperator {
 	GREATER_THAN_EQUAL = <any>">=" 
 }
 
-export class ScalarExpr extends ASTNode {}
+export abstract class ScalarExpr extends ASTNode {}
 
 export class AtomExpr extends ScalarExpr {
 	constructor(public value:Atom) {

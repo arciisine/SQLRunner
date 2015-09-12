@@ -1,6 +1,6 @@
 import {ASTNode} from '../index';
 
-export class SearchCondition extends ASTNode {}
+export abstract class SearchCondition extends ASTNode {}
 
 export enum SearchConditionOperator {
 	AND = <any>"AND", 

@@ -4,6 +4,7 @@
 %options case-insensitive
 
 %%
+"ACTION"							  return 'ACTION';
 "ALL"                                 return 'ALL';
 "AND"                                 return 'AND';
 "ANY"                                 return 'ANY';
@@ -15,10 +16,12 @@
 "BINARY"							  return 'BINARY';
 "BOOLEAN"							  return 'BOOLEAN';
 "BY"                                  return 'BY';
+"CASCADE"							  return 'CASCADE';
 CHAR(ACTER)?                          return 'CHARACTER';
 "CHECK"                               return 'CHECK';
 "CLOSE"                               return 'CLOSE';
 "COMMIT"                              return 'COMMIT';
+"CONSTRAINT"                          return 'CONSTRAINT';
 "CONTINUE"                            return 'CONTINUE';
 "CREATE"                              return 'CREATE';
 "CURRENT"                             return 'CURRENT';
@@ -57,8 +60,10 @@ INT(EGER)?                            return 'INTEGER';
 "JOIN"                                return 'JOIN';
 "KEY"                                 return 'KEY';
 "LANGUAGE"                            return 'LANGUAGE';
-"LIKE"                                return 'LIKE';
 "LEFT"                                return 'LEFT';
+"LIKE"                                return 'LIKE';
+"NO"								  return 'NO'
+"NOT EXISTS"						  return 'NOT_EXISTS';
 "NOT"                                 return 'NOT';
 "NULL"                                return 'NULLX';
 "NUMERIC"                             return 'NUMERIC';
@@ -76,6 +81,7 @@ INT(EGER)?                            return 'INTEGER';
 "PUBLIC"                              return 'PUBLIC';
 "REAL"                                return 'REAL';
 "REFERENCES"                          return 'REFERENCES';
+"RESTRICT"                            return 'RESTRICT';
 "RIGHT"                               return 'RIGHT';
 "ROLLBACK"                            return 'ROLLBACK';
 "SCHEMA"                              return 'SCHEMA';
@@ -89,6 +95,7 @@ INT(EGER)?                            return 'INTEGER';
 "TIMESTAMP"							  return 'TIMESTAMP';
 "TO"                                  return 'TO';
 "UNION"                               return 'UNION';
+"UNIQUE"                              return 'UNIQUE';
 "UPDATE"                              return 'UPDATE';
 "USER"                                return 'USER';
 "VALUES"                              return 'VALUES';
@@ -345,9 +352,10 @@ predicate:
 	|	scalar_exp opt_not LIKE string_literal opt_escape 			{ $$ = new pred.LikePredicate($1, $4, $5, !!$2); }
 	|	named_column_ref IS opt_not NULLX							{ $$ = new pred.NullCheckPredicate($1, !!$3); }
 	|	scalar_exp opt_not IN subquery								{ $$ = new pred.InQueryPredicate($1, $4, !!$2); }	
-	|	scalar_exp opt_not IN '(' atom_commalist ')'				 { $$ = new pred.InArrayPredicate($1, $5, !!$2); }
+	|	scalar_exp opt_not IN '(' atom_commalist ')'				{ $$ = new pred.InArrayPredicate($1, $5, !!$2); }
 	|	scalar_exp comparison any_all_some subquery					{ $$ = new pred.QueryComparisonPredicate($1, $2, $3, $4); }
 	|	EXISTS subquery												{ $$ = new pred.ExistenceCheckPredicate($2); }
+	|   NOT_EXISTS subquery											{ $$ = new pred.ExistenceCheckPredicate($2, true);  }
 	;
 
 subquery: 
@@ -464,7 +472,7 @@ table_element_commalist:
 
 table_element:
 		column_def												{ $$ = $1; }
-	|	table_constraint_def									{ $$ = $1; }	
+	|	nameable_table_constraint_def							{ $$ = $1; }					 
 	;
 
 column_def:
@@ -474,8 +482,31 @@ column_def:
 column_def_opt_list:
 		/* empty */												{ $$ = []; }
 	|	column_def_opt_list column_def_opt						{ $$ = $1; $$ = $$.concat([$2]); }
+	;		
+
+referential_trigger_action:
+		CASCADE 												{ $$ = constraint.ReferentialAction.CASCADE; } 
+	|	SET NULL												{ $$ = constraint.ReferentialAction.SET_NULL; }
+	|	SET DEFAULT												{ $$ = constraint.ReferentialAction.SET_DEFAULT; }
+	|	RESTRICT												{ $$ = constraint.ReferentialAction.RESTRICT; }
+	|	NO_ACTION												{ $$ = constraint.ReferentialAction.NO_ACTION; }
 	;
 
+update_trigger:
+		ON UPDATE referential_trigger_action					{ $$ = new constraint.ReferentialTriggerAction(constraint.ReferentialQueryOperation.UPDATE, $3); }
+	;
+	
+delete_trigger:
+		ON DELETE referential_trigger_action					{ $$ = new constraint.ReferentialTriggerAction(constraint.ReferentialQueryOperation.DELETE, $3); }
+	;
+
+opt_referential_triggers:
+		update_trigger											{ $$ = [$1] }
+	|	delete_trigger											{ $$ = [$1] }
+	|	update_trigger delete_trigger							{ $$ = [$1, $2] }
+	|	delete_trigger update_trigger							{ $$ = [$1, $2] }
+	;
+	
 column_def_opt:
 		NOT NULLX												{ $$ = new constraint.NotNullConstraint(); }
 	|	NULLX													{ $$ = new constraint.NullConstraint(); }
@@ -484,19 +515,30 @@ column_def_opt:
 	|	DEFAULT literal											{ $$ = new constraint.DefaultConstraint($1); }
 	|	DEFAULT NULLX											{ $$ = new constraint.DefaultNullConstraint(); }
 	|	CHECK '(' search_condition ')'							{ $$ = new constraint.CheckConstraint($3); }
-	|	REFERENCES table										{ $$ = new constraint.ForeignKeyConstraint($2); }	
-	|	REFERENCES table '(' column_commalist ')'				{ $$ = new constraint.ForeignKeyConstraint($2, $4); }
+	|	REFERENCES table opt_referential_triggers				{ $$ = new constraint.ForeignKeyConstraint($2, $3); }	
+	|	REFERENCES table '(' column_commalist ')' opt_referential_triggers 
+	{ 
+		$$ = new constraint.ForeignKeyConstraint($2, $4, $6); 
+	}
 	;
 
 table_constraint_def:
 		UNIQUE '(' column_commalist ')'							{ $$ = new constraint.UniqueKeyTableConstraint($3); }
 	|	PRIMARY KEY '(' column_commalist ')'					{ $$ = new constraint.PrimaryKeyTableConstraint($4); }
-	|	FOREIGN KEY '(' column_commalist ')' REFERENCES table	{ $$ = new constraint.ForeignKeyTableConstraint($4, $7); }
-	|	FOREIGN KEY '(' column_commalist ')' REFERENCES table '(' column_commalist ')'
+	|	FOREIGN KEY '(' column_commalist ')' REFERENCES table opt_referential_triggers
 	{ 
-		$$ = new constraint.ForeignKeyTableConstraint($4, $7, $9);
+		$$ = new constraint.ForeignKeyTableConstraint($4, $7, $8); 
+	}
+	|	FOREIGN KEY '(' column_commalist ')' REFERENCES table '(' column_commalist ')' opt_referential_triggers
+	{ 
+		$$ = new constraint.ForeignKeyTableConstraint($4, $7, $9, $11);
 	}
 	|	CHECK '(' search_condition ')'							{ $$ = new constraint.CheckTableConstraint($3); }
+	;
+
+nameable_table_constraint_def:
+		table_constraint_def									{ $$ = $1 }
+	|	CONSTRAINT identifier table_constraint_def				{ $$ = new constraint.NamedTableConstraint($2, $3); }
 	;
 
 column_commalist:

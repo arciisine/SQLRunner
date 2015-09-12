@@ -6,8 +6,8 @@ export class Null extends ASTNode {
 		return 'NULL'
 	}
 }
-export class Atom extends ASTNode {}
-export class Literal extends Atom {
+export abstract class Atom extends ASTNode {}
+export abstract class Literal extends Atom {
 	static build(value:any):Literal {
 		if (typeof value === 'string') {
 			return new StringLiteral(value)

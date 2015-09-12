@@ -18,9 +18,7 @@ export enum BinaryQueryOperator {
 	EXCEPT = <any>"EXCEPT"
 }
 
-export class SelectionExpr extends ASTNode {
-	
-}
+export abstract class SelectionExpr extends ASTNode {}
 
 export class ScalarSelectionExpr extends SelectionExpr {
 	constructor(
@@ -125,7 +123,7 @@ export class QueryFromTableRef extends FromTableRef {
 	}
 }
 
-export class SelectQuery extends Query {}
+export abstract class SelectQuery extends Query {}
 
 export class SingleSelectQuery extends SelectQuery {
 	constructor(

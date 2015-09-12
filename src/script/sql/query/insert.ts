@@ -5,7 +5,7 @@ import {NamedColumnRef, TableRef} from '../common/ref';
 import {ScalarExpr} from '../common/scalar';
 import {Literal, NullableAtom} from '../common/literal';
 
-export class InsertValues extends ASTNode {}
+export abstract class InsertValues extends ASTNode {}
 export class QueryValues extends InsertValues {
 	constructor(public query:SelectQuery) {
 		super();

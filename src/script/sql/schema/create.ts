@@ -10,7 +10,7 @@ import {ColumnType} from './column-type';
 import {TableConstraint, ColumnConstraint} from './constraint';
 import * as util from '../util';
 
-export class Schema extends ASTNode {}
+export abstract class Schema extends ASTNode {}
 
 export class ColumnSchema extends ASTNode {
 	constructor(

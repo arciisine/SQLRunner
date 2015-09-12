@@ -1,6 +1,6 @@
 import {ASTNode, Statement} from '../index';
 
-export class WhenAction extends ASTNode {}
+export abstract class WhenAction extends ASTNode {}
 export class ContinueWhenAction extends WhenAction {
 	toString() {
 		return 'CONTINUE';

@@ -12,7 +12,7 @@ export enum QueryComparisonOperator {
 	SOME = <any>"SOME"
 }
 
-export class Predicate extends SearchCondition {}
+export abstract class Predicate extends SearchCondition {}
 
 export class ComparisonPredicate extends Predicate {
 	constructor(
