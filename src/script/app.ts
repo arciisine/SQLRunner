@@ -22,7 +22,7 @@ export function start() {
   directives: [CORE_DIRECTIVES, FORM_DIRECTIVES].concat([DatabaseResults])
 })
 export class AppComponent {
-  select:select.SortableSelectQuery
+  select:select.SelectQuery
   database:Database;
   table:string
   error:string
@@ -31,7 +31,7 @@ export class AppComponent {
   constructor() {
     this.database = new Database()
     ZippedCSVDataSource.load('assets/data.zip').then(sql => {
-      this.database.sqlParser.parse(sql)
+      this.database.parse(sql)
         .forEach(stmt => {
           this.database.execStatement(stmt)
         })
@@ -50,7 +50,7 @@ export class AppComponent {
   
   updateQuery(sql:string) {
     try {
-      let query = this.database.sqlParser.parse(sql)[0]
+      let query = this.database.parse(sql)[0]
       if (query instanceof select.SelectQuery || query instanceof select.SortableSelectQuery) {
         this.select = query
       }
@@ -84,18 +84,17 @@ export class AppComponent {
   
   runQuery(query?:string|Query) {
     try {
-      if (query && typeof query === 'string') {
-        this.results = this.database.execStatement(this.database.sqlParser.parse(query))[0];
-      } else  {
-        if (!query) {
-          query = this.select
-        }
-        
-        this.results = this.database.execStatement(query);
-        if (this.results && Object.keys(this.results).length) {
-          this.results = this.results[0]    
-        }
+      if (!query) {
+        query = this.select
+      } else if (typeof query === 'string') {
+        query = this.database.parse(query)
+      } 
+              
+      this.results = this.database.execStatement(query);
+      if (this.results && Object.keys(this.results).length) {
+        this.results = this.results[0]    
       }
+      
       console.log(this.results);      
     } catch (e) {
       this.error = e.message.replace(/^\s+/g, '')

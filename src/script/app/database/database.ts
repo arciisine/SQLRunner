@@ -11,11 +11,15 @@ import * as util from 'sql/util';
 
 export class Database extends sql.Database {
 	
-	public sqlParser = new parser.Parser()
+	public parser = new parser.Parser()
 	public tables:{[name:string]:create.TableSchema} = {}
 	public views:{[name:string]:create.ViewSchema} = {}
 	get tableNames():Array<String> {
 		return Object.keys(this.tables)
+	}
+	
+	parse(sql:string):Array<Statement> {
+		return this.parser.parse(sql)
 	}
 
 	execStatement(statement:Statement):sql.Result {

@@ -74,7 +74,7 @@ export class ZippedCSVDataSource {
 		let arr = []
 		this.resolvedOrder.map( key => this.nodes[key]).forEach(node => {
 			arr.push(node.generateTable())
-			arr.concat(node.generateInserts())
+			arr = arr.concat(node.generateInserts())
 		})
 		return arr.join(';\n')
 	}

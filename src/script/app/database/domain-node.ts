@@ -9,6 +9,7 @@ export class DomainNode {
 	
 	constructor(public name:string, public columnNames:Array<string>, public data:Array<{[id:string]:(number|string)}>) {
 		this.dependsOn = {};
+		this.name = this.name.replace('db_', '')
 		this.columnNames
 			.filter(k => k.indexOf('ID') >= 0)
 			.map(x => x.replace('ID','').toLowerCase())
@@ -47,16 +48,14 @@ export class DomainNode {
 	}
 	
 	generateTable() {
-		let tableName = this.name.replace('db_','');
 		let columns = this.columnNames.map(key => this.generateColumn(key))
-		let table = new create.TableSchema(tableName, columns);
+		let table = new create.TableSchema(this.name, columns);
 		return table;
 	}
 	
 	generateInserts() {
-		let tableName = this.name.replace('db_','');
 		let commands:Array<Statement> = this.data.map(obj => 
-			insert.InsertQuery.build(tableName, this.columnNames.map(k =>{
+			insert.InsertQuery.build(this.name, this.columnNames.map(k =>{
 				if (obj[k] === 'NULL') {
 					return null
 				} else if (k.indexOf('Price') >= 0) {

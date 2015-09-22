@@ -54,9 +54,10 @@ GO[ \t]TO                             return 'GOTO';
 "INDICATOR"                           return 'INDICATOR';
 "INNER"                               return 'INNER';
 "INSERT"                              return 'INSERT';
-INT(EGER)?                            return 'INTEGER';
+"INTEGER"              	              return 'INTEGER';
 "INTERSECTION"						  return 'INTERSECTION';
 "INTO"                                return 'INTO';
+"INT"								  return 'INTEGER';
 "IS"                                  return 'IS';
 "JOIN"                                return 'JOIN';
 "KEY"                                 return 'KEY';
@@ -110,7 +111,7 @@ INT(EGER)?                            return 'INTEGER';
 "WORK"                                return 'WORK';
 
 \'[^'\n]*\'                           return 'STRING_LITERAL';
-\d+|\.\d+|\d\.\d*                     return 'NUMBER_LITERAL';
+\d+(\.\d*)?|\.\d+                     return 'NUMBER_LITERAL';
 \d+[eE][+-]?\d+|\d\.\d*[eE][+-]?\d+|\.\d*[eE][+-]?\d+ return 'SCIENTIFIC_NUMBER_LITERAL';
 
 [A-Za-z][A-Za-z0-9_]*                {
