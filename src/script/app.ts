@@ -2,6 +2,7 @@
 /// <reference path="custom-typings/sqljs.d.ts" />
 import {DomainNode} from 'app/database/domain-node'
 import {Database} from 'app/database/database';
+import {ZippedCSVDataSource} from 'app/database/zipped-csv-datasource';
 import {Component, View,bootstrap, FORM_DIRECTIVES, CORE_DIRECTIVES} from 'angular2/angular2';
 import {DatabaseResults} from 'app/component/results';
 import {Query} from 'sql/query/index'
@@ -9,11 +10,9 @@ import * as select from 'sql/query/select'
 import * as order from 'sql/query/orderby'
 import * as ref from 'sql/common/ref'
 
-
 export function start() {
 	bootstrap(AppComponent);
 }
-
 
 @Component({
   selector: 'db-app'
@@ -25,27 +24,27 @@ export function start() {
 export class AppComponent {
   select:select.SortableSelectQuery
   database:Database;
-  domain:DomainNode
+  table:string
   error:string
   results:sql.Result = { values : [], columns: []}
-  domains:Array<DomainNode>
  
   constructor() {
     this.database = new Database()
-    this.database.loadZip('assets/data.zip').then(() => {
-      this.domains = this.database.resolvedOrder.slice().sort((a,b) => {
-        return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0)
-      });
+    ZippedCSVDataSource.load('assets/data.zip').then(sql => {
+      this.database.sqlParser.parse(sql)
+        .forEach(stmt => {
+          this.database.execStatement(stmt)
+        })
     })
   }
  
-  buildDomainQuery() {
+  buildTableQuery() {
     return new select.SortableSelectQuery(
       new select.SingleSelectQuery(
         new select.AllSelection(), 
-        [new select.NamedFromTableRef(new ref.TableRef(this.domain.name))]
+        [new select.NamedFromTableRef(this.database.tables[this.table].name)]
       ),
-      [new order.OrderBy(this.domain.columnNames[0], true)]
+      [new order.OrderBy(this.database.tables[this.table].columns[0].name, true)]
     );
   }
   
@@ -60,9 +59,9 @@ export class AppComponent {
     } 
   }
  
-  setDomain(domain:DomainNode) {
-    this.domain = domain
-    this.select = this.buildDomainQuery()
+  setTable(table:string) {
+    this.table = table
+    this.select = this.buildTableQuery()
     this.runQuery()
   }
   

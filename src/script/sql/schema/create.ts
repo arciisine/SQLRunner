@@ -14,14 +14,14 @@ export abstract class Schema extends ASTNode {}
 
 export class ColumnSchema extends ASTNode {
 	constructor(
-		public name:String,
+		public name:string,
 		public type:ColumnType,
 		public constraints:Array<ColumnConstraint>
 	) {
 		super()
 	}
 	toString() {
-		return `"${this.name}" ${this.type} ${util.join(this.constraints)}`
+		return `${util.quoteOnKeyword(this.name)} ${this.type} ${util.join(this.constraints)}`
 	}
 }
 

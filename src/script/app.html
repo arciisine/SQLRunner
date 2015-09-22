@@ -2,7 +2,7 @@
 	<h2>Database Query Interface</h2>
 	
 	<ul class="nav nav-tabs">
-		<li role="presentation" *ng-for="#domain of domains" (click)="setDomain(domain)"><a href="#">{{domain.name}}</a></li>
+		<li role="presentation" *ng-for="#table of database.tableNames;" (click)="setTable(table)"><a href="#">{{table}}</a></li>
 	</ul>	
 	<db-results [results]="results" (order-by)="sortColumn($event)"></db-results>
 	<div class="row">

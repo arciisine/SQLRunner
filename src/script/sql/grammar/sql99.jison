@@ -442,7 +442,7 @@ schema_stmt:
 	;
 
 schema_authorize:
-		CREATE SCHEMA table_ref AUTHORIZATION userName schema_create_element_list 
+		CREATE SCHEMA table AUTHORIZATION userName schema_create_element_list 
 		{ $$ = new create.AuthorizationSchema($3, $5, $6); }
 	;
 
@@ -482,6 +482,7 @@ column_def:
 
 column_def_opt_list:
 		/* empty */												{ $$ = []; }
+	|	column_def_opt											{ $$ = [$1]; }
 	|	column_def_opt_list column_def_opt						{ $$ = $1; $$ = $$.concat([$2]); }
 	;		
 
@@ -502,7 +503,8 @@ delete_trigger:
 	;
 
 opt_referential_triggers:
-		update_trigger											{ $$ = [$1] }
+		/* empty */												{ $$ = []; }
+	|	update_trigger											{ $$ = [$1] }
 	|	delete_trigger											{ $$ = [$1] }
 	|	update_trigger delete_trigger							{ $$ = [$1, $2] }
 	|	delete_trigger update_trigger							{ $$ = [$1, $2] }
@@ -516,7 +518,7 @@ column_def_opt:
 	|	DEFAULT literal											{ $$ = new constraint.DefaultConstraint($1); }
 	|	DEFAULT NULLX											{ $$ = new constraint.DefaultNullConstraint(); }
 	|	CHECK '(' search_condition ')'							{ $$ = new constraint.CheckConstraint($3); }
-	|	REFERENCES table opt_referential_triggers				{ $$ = new constraint.ForeignKeyConstraint($2, $3); }	
+	|	REFERENCES table opt_referential_triggers				{ $$ = new constraint.ForeignKeyConstraint($2, null, $3); }	
 	|	REFERENCES table '(' column_commalist ')' opt_referential_triggers 
 	{ 
 		$$ = new constraint.ForeignKeyConstraint($2, $4, $6); 
@@ -621,11 +623,11 @@ grantee:
 	;
 
 drop_table:
-	DROP TABLE table_ref 								{ $$ = new drop.DropTableSchema($1); }
+	DROP TABLE table 									{ $$ = new drop.DropTableSchema($1); }
 	;
 	
 drop_view:
-	DROP VIEW table_ref 								{ $$ = new drop.DropViewSchema($1); }
+	DROP VIEW table     								{ $$ = new drop.DropViewSchema($1); }
 	;	
 
 	/* cursor definition */

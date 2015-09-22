@@ -13,7 +13,9 @@ export class DomainNode {
 			.filter(k => k.indexOf('ID') >= 0)
 			.map(x => x.replace('ID','').toLowerCase())
 			.filter(k => k != name)
-			.forEach(k => this.dependsOn[k] = k ); 	
+			.forEach(k => {
+				this.dependsOn[k] = k 
+			});
 	}
 	
 	generateColumn(key:string) {
