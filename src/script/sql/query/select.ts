@@ -120,7 +120,7 @@ export class QueryFromTableRef extends FromTableRef {
 		super(alias)
 	}
 	toString() {
-		return `(${this.query})${super.toString()}`;
+		return `(\n\t${this.query.toString().replace(/\n/m, '\n\t')}\n)${super.toString()}`;
 	}
 }
 
@@ -147,7 +147,7 @@ export class SingleSelectQuery extends SelectQuery {
 			this.where ? `WHERE ${this.where}` : null,
 			this.groupBy ? `GROUP BY ${util.join(this.groupBy, ',')}` : null,
 			this.having ? `HAVING ${this.having}` : null
-		], '\n\t')
+		], '\n')
 	}
 }
 
@@ -160,7 +160,7 @@ export class BinarySelectQuery extends SelectQuery {
 		super()
 	}
 	toString() {
-		return `${this.left} ${this.operator} ${this.right}`;
+		return `${this.left}\n\n${this.operator}\n\n${this.right}`;
 	}
 }
 
@@ -172,7 +172,7 @@ export class SortableSelectQuery extends Query {
 		super()
 	}
 	toString() {
-		return `${this.query}${util.join(this.orderBy, ',', '\n\tORDER BY ')}`;
+		return `${this.query}${util.join(this.orderBy, ',', '\nORDER BY ')}`;
 	}
 
 }

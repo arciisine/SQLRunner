@@ -1,0 +1,52 @@
+html, body {
+	height: 100%;
+}
+db-app {
+	display: block;
+	height: 100%;
+	width: 100%;
+}
+
+db-app h3 {
+	margin-top: 0;
+}
+
+db-app>.container {
+	height: calc(100% - 71px);
+	width: 100%;
+}
+
+db-app>.container>.row {
+	height: 100%;
+}
+
+db-app>.container>.row>div {
+	height: 100%;
+}
+
+db-app .list-group {
+	margin-bottom: 0px;
+	padding-bottom: 0px;
+}
+
+.query textarea {
+	width: 100%;
+	height: calc(100% - 50px);
+}
+
+.query .btn {
+	width: 100%;
+	margin-bottom: .5em;
+}
+
+.container .row .wrapper {
+	height: calc(100% - 50px);
+	overflow-y: auto;
+	border-bottom: 1px solid #ccc;
+	border-bottom-right-radius: 5px;
+	border-bottom-left-radius: 5px;
+}
+
+.list-group .list-group-item:hover {
+	cursor: pointer;
+}

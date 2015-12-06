@@ -1,21 +1,53 @@
+<nav class="navbar navbar-inverse navbar-static-top">
+	<div class="navbar-header">
+      <span class="navbar-brand">Database Query Interface</span>
+    </div>
+</nav>
+
 <div class="container">
-	<h2>Database Query Interface</h2>
-	<form #form="form" (submit)="rebuildSelection()">
-		<select [(ng-model)]="table">
-			<option>Please select a table</option>
-			<option *ng-for="#table of database.tableNames" [value]="table">{{table}}</option>
-		</select>
-		<button type="submit" class="btn">Pick</button>
-	</form>
-	
-	<db-results [results]="results" (order-by)="sortColumn($event)"></db-results>
+	<div *ng-if="error" class="alert alert-warning alert-dismissible" role="alert">
+		<button type="button" class="close" (click)="error = null"><span>X</span></button>
+		<pre class="output" [inner-html]="error"></pre>
+	</div>
+
 	<div class="row">
-		<div class="col-xs-6">
-			<textarea rows="10" class="form-control" [(ng-model)]="queryText"></textarea>
-			<button (click)="runQuery()" class="btn btn-primary">Run Query</button>
+		<div class="col-xs-2 canned">
+			<h3>Canned Queries</h3>
+			<div class="wrapper">
+				<ul class="list-group" *ng-if="canned.length == 0">
+					<li class="list-group-item">Loading ...</li>
+				</ul>
+				<ul class="list-group">
+					<li #self *ng-for="#query of canned" (click)="queryText = query[1].toString()"  (mouseenter)="self.classList.add('active')"
+					 (mouseleave)="self.classList.remove('active')" class="list-group-item">{{query[0]}}</li>
+				</ul>
+			</div>
 		</div>
-		<div class="col-xs-6">
-			<pre class="output" [inner-html]="error"></pre>
+		<div class="col-xs-3 query">
+			<h3>Query</h3>
+			 <button (click)="runQuery()" class="btn btn-primary">Run</button>			
+			<textarea class="form-control" [(ng-model)]="queryText" style="height: calc(100% - 90px)"></textarea>			
+		</div>
+		<div class="col-xs-5 results">
+			<h3>Results</h3>
+			<db-results [results]="results" (order-by)="sortColumn($event)"></db-results>			
+		</div>
+		<div class="col-xs-2 history">
+			<h3>History</h3>
+			<div class="wrapper">
+				<ul class="list-group" *ng-if="history.length == 0">
+					<li class="list-group-item">Loading ...</li>
+				</ul>				
+				<ul class="list-group">
+					<li #self *ng-for="#stmt of history" class="list-group-item"
+					(mouseenter)="self.classList.add('active')"
+					 (mouseleave)="self.classList.remove('active')"
+					 (click)="queryText = stmt.toString()"
+					>
+						{{stmt}}
+					</li>
+				</ul>
+			</div>
 		</div>
 	</div>
 </div>

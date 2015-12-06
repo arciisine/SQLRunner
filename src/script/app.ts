@@ -9,6 +9,8 @@ import {Query} from 'sql/query/index'
 import * as select from 'sql/query/select'
 import * as order from 'sql/query/orderby'
 import * as ref from 'sql/common/ref'
+import {Statement} from 'sql/index'
+import {Queries} from './queries';
 
 export function start() {
 	bootstrap(AppComponent);
@@ -27,27 +29,31 @@ export class AppComponent {
   queryText:string
   database:Database
   error:string
-	table:string
   results:sql.Result = { values : [], columns: []}
+  history:Array<Statement> = []
+  canned:Array<any[]> = []
 
   constructor() {
     this.database = new Database()
     ZippedCSVDataSource.load('assets/data.zip').then(sql => {
       this.database.parse(sql)
         .forEach(stmt => {
+          this.history.unshift(stmt)
           this.database.execStatement(stmt)
         })
+        
+      this.database.tableNames.forEach( name => {
+        this.canned.push([`Select from ${name}`, this.database.parse(`SELECT * FROM "${name}"`)]) 
+      })
+      
+      for (let key in Queries) {
+        try {
+          this.canned.push([key, this.database.parse(Queries[key])]);
+        } catch (e) {
+          console.log(e)
+        }
+      }
     })
-  }
-
-  buildTableQuery() {
-    return new select.SortableSelectQuery(
-      new select.SingleSelectQuery(
-        new select.AllSelection(),
-        [new select.NamedFromTableRef(this.database.tables[this.table].name)]
-      ),
-      [new order.OrderBy(this.database.tables[this.table].columns[0].name, true)]
-    );
   }
 
   updateQuery() {
@@ -61,12 +67,7 @@ export class AppComponent {
       this.error = e.message.replace(/^\s+/g, '')
     }
   }
-
-  rebuildSelection() {
-    this.select = this.buildTableQuery()
-    this.runQuery(this.select)
-  }
-
+  
   sortColumn(event) {
     if (!(this.select instanceof select.SortableSelectQuery)) {
       this.select = new select.SortableSelectQuery(this.select, [])
@@ -99,10 +100,9 @@ export class AppComponent {
         query = this.database.parse(query as string)[0] as select.SelectQuery
       }
       
-      console.log(query)
-      
       this.queryText = query.toString()
       this.select = query
+      this.history.unshift(query)
 
       this.results = this.database.execStatement(query);
       if (this.results && Object.keys(this.results).length) {
@@ -110,7 +110,6 @@ export class AppComponent {
       }
 
       console.log(this.results);
-      this.error = 'Valid Query!'
     } catch (e) {
       this.error = e.message.replace(/^\s+/g, '')
     }

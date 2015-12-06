@@ -1,12 +1,4 @@
-let queries:{[key:string]:string} = {
-	"Book" : "SELECT * FROM Book",
-	"Customer" : "SELECT * FROM Customer",
-	"Employee" : "SELECT * FROM Employee",
-	"Order" : `SELECT * FROM "Order"`,
-	"Order_Detail" : "SELECT * FROM Order_Detail",
-	"Shipper" : "SELECT * FROM Shipper",
-	"Subject" : "SELECT * FROM Subject",
-	"Supplier" : "SELECT * FROM Supplier",
+export const Queries:{[key:string]:string} = {
 	"1. Show the title of books with unitprice higher than 50." : `
 		SELECT Title 
 		FROM Book 
@@ -92,14 +84,14 @@ let queries:{[key:string]:string} = {
 		HAVING SUM(b.UnitPrice * od.Quantity) > 70
 	`,
 	
-	/*"8. Show the cheapest price each customer paid and their book names. List the result in ascending price." : `
+	"8. Show the cheapest price each customer paid and their book names. List the result in ascending price." : `
 		SELECT c.FirstName, c.LastName, 
 		FROM Customer c
 			INNER JOIN "Order" o ON o.CustomerID = c.CustomerID
 			INNER JOIN Order_Detail od ON od.OrderID = o.OrderID
 			INNER JOIN Book b ON b.BookID = od.BookID
 		GROUP BY c.FirstName, c.LastName
-	`,*/
+	`,
 	
 	"9. Show the names of all the books shipped on 08/04/2014 and their shippers' names." : `
 		SELECT b.Title, sh.ShpperName
@@ -174,14 +166,14 @@ let queries:{[key:string]:string} = {
 		ORDER BY Qty DESC
 	`,
 	
-	/*"14. Show the names of the employees who processed at least 8 books." : `
+	"*14. Show the names of the employees who processed at least 8 books." : `
 		SELECT e.FirstName, e.LastName
 		FROM Employee e
 			INNER JOIN "Order" o ON o.EmployeeID = e.EmployeeID
 			INNER JOIN Order_Detail od ON od.OrderID = o.OrderID
 		GROUP BY e.FirstName, e.LastName
 		HAVING SUM(od.Quantity) > 7	
-	`,*/
+	`,
 	
 	"15. Show the name of the customers who have ordered at least a book in 'category3' or 'category4' and the book names." : `
 		SELECT c.FirstName, c.LastName, b.Title
@@ -233,7 +225,7 @@ let queries:{[key:string]:string} = {
 			)
 	`,
 		
-	/*"19. Show the names of customers who have ordered more than 3 book and the corresponding quantities. List the result in the descending quantity." : `
+	"*19. Show the names of customers who have ordered more than 3 book and the corresponding quantities. List the result in the descending quantity." : `
 		SELECT c.FirstName, c.LastName, SUM(od.Quantity) qty
 		FROM Customer c
 			INNER JOIN "Order" o ON o.CustomerID = c.CustomerID
@@ -241,7 +233,7 @@ let queries:{[key:string]:string} = {
 		GROUP BY c.FirstName, c.LastName
 		HAVING qty > 3
 		ORDER BY qty DESC
-	`,*/
+	`,
 	
 	"20. Show the names of customers who ordered all books written by 'author3' or 'author4'.":`
 		SELECT DISTINCT c.FirstName, c.LastName
@@ -299,6 +291,4 @@ let queries:{[key:string]:string} = {
 		
 	`,
 	
-}
-
-//export default queries;
+};

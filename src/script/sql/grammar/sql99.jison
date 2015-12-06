@@ -364,24 +364,18 @@ any_all_some:
 	;
 
 predicate:
-		scalar_exp comparison scalar_exp				
-		{
-			if ($3 instanceof select.SelectQuery) {
-				$$ = new pred.QueryComparisonPredicate($1, $2, null, $3);
-			} else {
-				$$ = new pred.ComparisonPredicate($1, $2, $3);
-			}
-		}
-	|	scalar_exp comparison any_all_some '(' select_expr ')'			{ $$ = new pred.QueryComparisonPredicate($1, $2, $3, $4); }	
-	|	scalar_exp opt_not BETWEEN scalar_exp AND scalar_exp 			{ $$ = new pred.BetweenPredicate($1, $4, $6, !!$2); }
-	|	scalar_exp opt_not LIKE string_literal opt_escape 				{ $$ = new pred.LikePredicate($1, $4, $5, !!$2); }
-	|	named_column_ref IS opt_not NULLX								{ $$ = new pred.NullCheckPredicate($1, !!$3); }
-	|	scalar_exp opt_not IN '(' select_expr ')'						{ $$ = new pred.InQueryPredicate($1, $5, !!$2); }	
-	|	scalar_exp opt_not IN '(' atom_commalist ')'					{ $$ = new pred.InArrayPredicate($1, $5, !!$2); }
-	|	EXISTS '(' select_expr ')'										{ $$ = new pred.ExistenceCheckPredicate($2); }
-	|   NOT_EXISTS '(' select_expr ')'									{ $$ = new pred.ExistenceCheckPredicate($2, true);  }
+		scalar_exp comparison scalar_exp							{ $$ = new pred.ComparisonPredicate($1, $2, $3); }
+	|   scalar_exp comparison '(' select_expr ')'					{ $$ = new pred.QueryComparisonPredicate($1, $2, null, $4); }
+	|	scalar_exp comparison any_all_some '(' select_expr ')'		{ $$ = new pred.QueryComparisonPredicate($1, $2, $3, $5); }	
+	|	scalar_exp opt_not BETWEEN scalar_exp AND scalar_exp 		{ $$ = new pred.BetweenPredicate($1, $4, $6, !!$2); }
+	|	scalar_exp opt_not LIKE string_literal opt_escape 			{ $$ = new pred.LikePredicate($1, $4, $5, !!$2); }
+	|	named_column_ref IS opt_not NULLX							{ $$ = new pred.NullCheckPredicate($1, !!$3); }
+	|	scalar_exp opt_not IN '(' select_expr ')'					{ $$ = new pred.InQueryPredicate($1, $5, !!$2); }	
+	|	scalar_exp opt_not IN '(' atom_commalist ')'				{ $$ = new pred.InArrayPredicate($1, $5, !!$2); }
+	|	EXISTS '(' select_expr ')'									{ $$ = new pred.ExistenceCheckPredicate($2); }
+	|   NOT_EXISTS '(' select_expr ')'								{ $$ = new pred.ExistenceCheckPredicate($2, true);  }
 	;
-
+	
 	/* scalar expressions */
 
 scalar_exp:
@@ -394,7 +388,6 @@ scalar_exp:
 	|	atom										{ $$ = new scalar.AtomExpr($1); }
 	|	named_column_ref							{ $$ = new scalar.NamedColumnRefExpr($1); }
 	|	function_ref								{ $$ = new scalar.FunctionExpr($1); }
-//	|	'(' select_expr ')'							{ $$ = new scalar.QueryExpr($2); }
 	|	'(' scalar_exp ')'							{ $$ = $2; }
 	;
 	
@@ -790,14 +783,13 @@ select_expr_ordered:
 	select_expr opt_order_by_clause							{ $$ = new select.SortableSelectQuery($1, $2); }
 	;
 
-
 select_expr:
-		select_statement									{ $$ = $1; }
-	| 	'(' select_expr ')'									{ $$ = $2; }
-	|	select_expr INTERSECTION select_expr				{ $$ = new select.BinarySelectQuery($1, select.BinaryQueryOperator.INTERSECTION, $3); }
+		select_statement							{ $$ = $1; }
+	| 	'(' select_expr ')'							{ $$ = $2; }
+	|	select_expr INTERSECTION select_expr		{ $$ = new select.BinarySelectQuery($1, select.BinaryQueryOperator.INTERSECTION, $3); }
 	|	select_expr EXCEPT select_expr				{ $$ = new select.BinarySelectQuery($1, select.BinaryQueryOperator.EXCEPT, $3); }
 	|	select_expr UNION select_expr				{ $$ = new select.BinarySelectQuery($1, select.BinaryQueryOperator.UNION, $3); }
-	|	select_expr UNION ALL select_expr				{ $$ = new select.BinarySelectQuery($1, select.BinaryQueryOperator.UNION, $4);	}
+	|	select_expr UNION ALL select_expr			{ $$ = new select.BinarySelectQuery($1, select.BinaryQueryOperator.UNION, $4);	}
 	;
 
 opt_distinct:

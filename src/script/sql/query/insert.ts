@@ -19,7 +19,7 @@ export class AtomValues extends InsertValues {
 		super();
 	}
 	toString() { 
-		return `(${this.atoms.map(x => x.toString()).join(',')})`; 
+		return `(${this.atoms.map(x => x.toString()).join(', ')})`; 
 	}
 }
 
@@ -44,6 +44,6 @@ export class InsertQuery extends Query {
 	}
 	
 	toString() {
-		return `INSERT INTO ${this.table} ${this.columns?`(${this.columns.map(x => x.toString()).join(',')})`:''} VALUES ${this.values}`
+		return `INSERT INTO ${this.table} ${this.columns?`(${this.columns.map(x => x.toString()).join(', ')})`:''} VALUES ${this.values}`
 	}
 }
