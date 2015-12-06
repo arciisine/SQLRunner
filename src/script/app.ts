@@ -62,10 +62,9 @@ export class AppComponent {
     }
   }
 
-  rebuildSelection(table:string) {
-    this.table = table
+  rebuildSelection() {
     this.select = this.buildTableQuery()
-    this.runQuery()
+    this.runQuery(this.select)
   }
 
   sortColumn(event) {
@@ -83,18 +82,27 @@ export class AppComponent {
       } else if (event.column === orderBy.column.toString()) {
         orderBy.dir = orderBy.dir === order.OrderByDirection.ASC ? order.OrderByDirection.DESC : order.OrderByDirection.ASC;
       }
-      this.runQuery();
+      this.runQuery(this.select);
     }
   }
 
 
   runQuery(query?:string|Query) {
     try {
-      if (!query) {
+      if (!query && this.queryText) {
+        query = this.queryText
+      } else if (!this.queryText && !query) {
         query = this.select
-      } else if (typeof query === 'string') {
+      }
+      
+      if (typeof query === 'string') {
         query = this.database.parse(query as string)[0] as select.SelectQuery
       }
+      
+      console.log(query)
+      
+      this.queryText = query.toString()
+      this.select = query
 
       this.results = this.database.execStatement(query);
       if (this.results && Object.keys(this.results).length) {
@@ -102,6 +110,7 @@ export class AppComponent {
       }
 
       console.log(this.results);
+      this.error = 'Valid Query!'
     } catch (e) {
       this.error = e.message.replace(/^\s+/g, '')
     }

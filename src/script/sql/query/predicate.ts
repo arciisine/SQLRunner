@@ -104,7 +104,7 @@ export class QueryComparisonPredicate extends Predicate {
 		super()
 	}
 	toString() {
-		return `${this.left} ${this.comparison} ${this.mode} (${this.right}`
+		return `${this.left} ${this.comparison} ${this.mode} ${this.right}`
 	}
 }
 

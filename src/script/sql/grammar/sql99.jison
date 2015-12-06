@@ -147,11 +147,11 @@ TRUE|FALSE                            return 'BOOLEAN_LITERAL';
 "+"                                   return 'PLUS';
 "-"                                   return 'MINUS';
 "="                                   return 'EQUAL';
+"<="                                  return 'LESS_THAN_EQUAL';
+">="                                  return 'GREATER_THAN_EQUAL';
 "<>"                                  return 'NOT_EQUAL';
 "<"                                   return 'LESS_THAN';
 ">"                                   return 'GREATER_THAN';
-"<="                                  return 'LESS_THAN_OR_EQUAL';
-">="                                  return 'GREATER_THAN_OR_EQUAL';
 
 [ \r\t\n]+                              /* Skip */;
 
@@ -164,10 +164,11 @@ TRUE|FALSE                            return 'BOOLEAN_LITERAL';
 %left OR
 %left AND
 %left NOT
-%left EQUAL NOT_EQUAL LESS_THAN GREATER_THAN LESS_THAN_OR_EQUAL GREATER_THAN_OR_EQUAL
+%left EQUAL NOT_EQUAL LESS_THAN GREATER_THAN LESS_THAN_EQUAL GREATER_THAN_EQUAL
 %left PLUS MINUS
 %left ASTERISK DIVIDE
 %left UNION INTERSECTION EXCEPT
+%left ANY ALL SOME
 %nonassoc UMINUS
 
 %start program
@@ -324,7 +325,7 @@ data_type:
 	/* search conditions */
 
 search_condition:										
-	|	search_condition OR search_condition			{ $$ = new cond.BinarySearchCondition($1, cond.SearchConditionOperator.OR, $3) }
+		search_condition OR search_condition			{ $$ = new cond.BinarySearchCondition($1, cond.SearchConditionOperator.OR, $3) }
 	|	search_condition AND search_condition			{ $$ = new cond.BinarySearchCondition($1, cond.SearchConditionOperator.AND, $3) }
 	|	NOT search_condition							{ $$ = new cond.NotSearchCondition($2); }
 	|	'(' search_condition ')'						{ $$ = $2; }
@@ -332,7 +333,7 @@ search_condition:
 	;
 
 opt_not:
-		/* empty */
+		/* empty  */
 	|	NOT							{ $$ = true; }
 	;
 
@@ -363,20 +364,22 @@ any_all_some:
 	;
 
 predicate:
-		scalar_exp comparison scalar_exp							{ $$ = new pred.ComparisonPredicate($1, $2, $3); }
-	|	scalar_exp opt_not BETWEEN scalar_exp AND scalar_exp 		{ $$ = new pred.BetweenPredicate($1, $4, $6, !!$2); }
-	|	scalar_exp opt_not LIKE string_literal opt_escape 			{ $$ = new pred.LikePredicate($1, $4, $5, !!$2); }
-	|	named_column_ref IS opt_not NULLX							{ $$ = new pred.NullCheckPredicate($1, !!$3); }
-	|	scalar_exp opt_not IN subquery								{ $$ = new pred.InQueryPredicate($1, $4, !!$2); }	
-	|	scalar_exp opt_not IN '(' atom_commalist ')'				{ $$ = new pred.InArrayPredicate($1, $5, !!$2); }
-	|	scalar_exp comparison any_all_some subquery					{ $$ = new pred.QueryComparisonPredicate($1, $2, $3, $4); }
-	|	EXISTS subquery												{ $$ = new pred.ExistenceCheckPredicate($2); }
-	|   NOT_EXISTS subquery											{ $$ = new pred.ExistenceCheckPredicate($2, true);  }
-	;
-
-subquery: 
-		'(' select_statement ')'						{ $$ = $2 }
-	|	'(' subquery ')'								{ $$ = $2 }
+		scalar_exp comparison scalar_exp				
+		{
+			if ($3 instanceof select.SelectQuery) {
+				$$ = new pred.QueryComparisonPredicate($1, $2, null, $3);
+			} else {
+				$$ = new pred.ComparisonPredicate($1, $2, $3);
+			}
+		}
+	|	scalar_exp comparison any_all_some '(' select_expr ')'			{ $$ = new pred.QueryComparisonPredicate($1, $2, $3, $4); }	
+	|	scalar_exp opt_not BETWEEN scalar_exp AND scalar_exp 			{ $$ = new pred.BetweenPredicate($1, $4, $6, !!$2); }
+	|	scalar_exp opt_not LIKE string_literal opt_escape 				{ $$ = new pred.LikePredicate($1, $4, $5, !!$2); }
+	|	named_column_ref IS opt_not NULLX								{ $$ = new pred.NullCheckPredicate($1, !!$3); }
+	|	scalar_exp opt_not IN '(' select_expr ')'						{ $$ = new pred.InQueryPredicate($1, $5, !!$2); }	
+	|	scalar_exp opt_not IN '(' atom_commalist ')'					{ $$ = new pred.InArrayPredicate($1, $5, !!$2); }
+	|	EXISTS '(' select_expr ')'										{ $$ = new pred.ExistenceCheckPredicate($2); }
+	|   NOT_EXISTS '(' select_expr ')'									{ $$ = new pred.ExistenceCheckPredicate($2, true);  }
 	;
 
 	/* scalar expressions */
@@ -391,7 +394,7 @@ scalar_exp:
 	|	atom										{ $$ = new scalar.AtomExpr($1); }
 	|	named_column_ref							{ $$ = new scalar.NamedColumnRefExpr($1); }
 	|	function_ref								{ $$ = new scalar.FunctionExpr($1); }
-	|	'(' select_statement ')'					{ $$ = new scalar.QueryExpr($1); }
+//	|	'(' select_expr ')'							{ $$ = new scalar.QueryExpr($2); }
 	|	'(' scalar_exp ')'							{ $$ = $2; }
 	;
 	
@@ -570,7 +573,7 @@ opt_column_commalist:
 	;
 
 schema_view:
-		CREATE VIEW opt_if_not_exists table opt_column_commalist AS select_statement opt_with_check_option
+		CREATE VIEW opt_if_not_exists table opt_column_commalist AS select_expr opt_with_check_option
 		{
 			$$ = new create.ViewSchema($4, $5, $7, !!$8, $3)
 		}
@@ -580,6 +583,7 @@ opt_with_check_option:
 		/* empty */
 	|	WITH CHECK OPTION								{ $$ = true; }
 	;
+
 
 schema_privilege:
 		GRANT privilege_item opt_with_grant_option { $$ = $2; $$.withGrant = !!$3 }
@@ -780,29 +784,21 @@ target:
 	;
 
 	/* query expressions */
-
-select_expr_op:
-		UNION												{ $$ = select.BinaryQueryOperator.UNION; }		
-	|	UNION ALL											{ $$ = select.BinaryQueryOperator.UNION; }
-	|	INTERSECTION										{ $$ = select.BinaryQueryOperator.INTERSECTION; }
-	|	EXCEPT												{ $$ = select.BinaryQueryOperator.EXCEPT; }
-	;
+	
 
 select_expr_ordered:
 	select_expr opt_order_by_clause							{ $$ = new select.SortableSelectQuery($1, $2); }
 	;
 
+
 select_expr:
 		select_statement									{ $$ = $1; }
-	|	select_expr select_expr_op select_term				{ $$ = new select.BinarySelectQuery($1, $2, $3); }
-	| 	'(' select_expr ')'									{ $$ = $1; }
+	| 	'(' select_expr ')'									{ $$ = $2; }
+	|	select_expr INTERSECTION select_expr				{ $$ = new select.BinarySelectQuery($1, select.BinaryQueryOperator.INTERSECTION, $3); }
+	|	select_expr EXCEPT select_expr				{ $$ = new select.BinarySelectQuery($1, select.BinaryQueryOperator.EXCEPT, $3); }
+	|	select_expr UNION select_expr				{ $$ = new select.BinarySelectQuery($1, select.BinaryQueryOperator.UNION, $3); }
+	|	select_expr UNION ALL select_expr				{ $$ = new select.BinarySelectQuery($1, select.BinaryQueryOperator.UNION, $4);	}
 	;
-
-select_term:
-		select_statement									{ $$ = $1; }	
-	| 	'(' select_term ')'									{ $$ = $1; }
-	;
-
 
 opt_distinct:
 		/* empty */										{ $$ = false }
@@ -864,9 +860,8 @@ table_ref:
 
 dynamic_table_ref:
 		table_ref								{ $$ = $1; }
-	|   subquery opt_alias						{ $$ = new select.QueryFromTableRef($1, $2); }
+	|   '(' select_expr ')' opt_alias			{ $$ = new select.QueryFromTableRef($2, $4); }
 	;
-
 
 opt_where_clause:
 		/* empty */

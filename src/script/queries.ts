@@ -244,23 +244,58 @@ let queries:{[key:string]:string} = {
 	`,*/
 	
 	"20. Show the names of customers who ordered all books written by 'author3' or 'author4'.":`
-		(
-			SELECT c.CustomerID, b.BookID
-			FROM Customer c, Book b
-			WHERE b.Author = 'author3'
-						
-			EXCEPT 
-		
-			SELECT c.CustomerID, b.BookID
-			FROM Customer c, Book b
-	)			INNER JOIN "Order" o ON o.CustomerID = c.CustomerID
-				INNER JOIN Order_Detail od ON od.OrderID = o.OrderID
-				INNER JOIN Book b ON b.BookId = od.BookID
-			WHERE
-				b.Author = 'author3'
-			
-		UNION
-		
+		SELECT DISTINCT c.FirstName, c.LastName
+		FROM Customer c
+			INNER JOIN 
+			(
+				(
+					SELECT c.CustomerID
+					FROM Customer c
+					
+					EXCEPT
+					
+					SELECT t3.CustomerID 
+					FROM (
+						SELECT c.CustomerID as CustomerID, b.BookID
+						FROM Customer c, Book b
+						WHERE b.Author = 'author3'
+									
+						EXCEPT 
+					
+						SELECT c.CustomerID, b.BookID
+						FROM Customer c
+							INNER JOIN "Order" o ON o.CustomerID = c.CustomerID
+							INNER JOIN Order_Detail od ON od.OrderID = o.OrderID
+							INNER JOIN Book b ON b.BookId = od.BookID
+						WHERE
+							b.Author = 'author3'
+					) t3
+				)	
+				UNION
+				(
+					SELECT c.CustomerID
+					FROM Customer c
+					
+					EXCEPT
+					
+					SELECT t4.CustomerID 
+					FROM (
+						SELECT c.CustomerID, b.BookID
+						FROM Customer c, Book b
+						WHERE b.Author = 'author4'
+									
+						EXCEPT 
+					
+						SELECT c.CustomerID, b.BookID
+						FROM Customer c
+							INNER JOIN "Order" o ON o.CustomerID = c.CustomerID
+							INNER JOIN Order_Detail od ON od.OrderID = o.OrderID
+							INNER JOIN Book b ON b.BookId = od.BookID
+						WHERE
+							b.Author = 'author4'
+					) t4
+				)
+			) t34 ON t34.CustomerID = c.CustomerID
 		
 	`,
 	

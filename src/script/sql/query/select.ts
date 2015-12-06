@@ -172,7 +172,7 @@ export class SortableSelectQuery extends Query {
 		super()
 	}
 	toString() {
-		return `${this.query}${util.join(this.orderBy, ',', ' ORDER BY ')}`;
+		return `${this.query}${util.join(this.orderBy, ',', '\n\tORDER BY ')}`;
 	}
 
 }

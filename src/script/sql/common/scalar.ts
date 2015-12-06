@@ -84,7 +84,7 @@ export class QueryExpr extends ScalarExpr {
 		super()		
 	}
 	toString() {
-		return this.query.toString();
+		return '(' + this.query.toString() + ')';
 	}
 }
 
