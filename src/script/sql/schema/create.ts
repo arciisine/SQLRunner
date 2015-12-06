@@ -16,7 +16,7 @@ export class ColumnSchema extends ASTNode {
 	constructor(
 		public name:string,
 		public type:ColumnType,
-		public constraints:Array<ColumnConstraint>
+		public constraints:Array<ColumnConstraint> = []
 	) {
 		super()
 	}
@@ -34,7 +34,8 @@ export class TableSchema extends CreateSchema {
 
 	constructor(
 		name:TableRef|string,
-		created:Array<ColumnSchema|TableConstraint>
+		created:Array<ColumnSchema|TableConstraint>,
+		public force: Boolean = true
 	) {
 		super();
 		if (typeof name === 'string') {
@@ -58,7 +59,8 @@ export class ViewSchema extends CreateSchema {
 		public name:TableRef,
 		public columns:Array<string>,
 		public query:SelectQuery,
-		public checkOption:boolean = false
+		public checkOption:boolean = false,
+		public force: Boolean = true
 	) {
 		super();
 	}

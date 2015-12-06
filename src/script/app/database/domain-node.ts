@@ -63,7 +63,7 @@ export class DomainNode {
 				} else if (k.indexOf('Quantity') >= 0 || k.indexOf('ID') >= 0) {
 					return parseInt(obj[k].toString())
 				} else if (k.indexOf('Date') >= 0) {
-					return new Date(obj[k]).toISOString().split('T')[0]
+					return new Date(`${obj[k]}`).toISOString().split('T')[0]
 				}
 				return obj[k];
 			}), this.columnNames)

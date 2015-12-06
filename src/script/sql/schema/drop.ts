@@ -7,7 +7,8 @@ export abstract class DropSchema extends ASTNode {}
 
 export class DropTableSchema extends DropSchema {
 	constructor(
-		public name:TableRef
+		public name: TableRef,
+		public force: boolean = true
 	) {
 		super();
 	}
@@ -18,7 +19,8 @@ export class DropTableSchema extends DropSchema {
 
 export class DropViewSchema extends DropSchema {
 	constructor(
-		public name:TableRef
+		public name: TableRef,
+		public force: boolean = true
 	) {
 		super();
 	}

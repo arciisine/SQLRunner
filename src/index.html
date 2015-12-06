@@ -14,14 +14,16 @@
 					sqljs : '/node_modules/sql.js/js/sql',
 					zipjs : '/node_modules/zip.js/WebContent/zip',
 					papaparse : '/node_modules/papaparse/papaparse.min',
+					
+					crypto: '/node_modules/crypto/index.js',
 					angular2: '/node_modules/angular2',
-					rx : '/node_modules/angular2/node_modules/rx/dist/rx.min',
-					Reflect : '/node_modules/angular2/node_modules/reflect-metadata/temp/Reflect',
-					zonejs : '/node_modules/angular2/node_modules/zone.js/dist/zone.min'	
+					'@reactivex' : '/node_modules/angular2/node_modules/@reactivex',
+					Reflect : '/node_modules/angular2/node_modules/reflect-metadata/Reflect',
+					zonejs : '/node_modules/angular2/node_modules/zone.js/dist/zone.min'
 				}
 			});
 			Promise
-				.all(['zipjs', 'papaparse', 'sqljs','Reflect', 'zonejs'].map(function(i) { return System.import(i); }))
+				.all(['zipjs', 'papaparse', 'sqljs', 'Reflect', 'zonejs'].map(function(i) { return System.import(i); }))
 				.then(function(data) {
 					window.zipjs = data.shift();
 					zipjs.workerScriptsPath = '/node_modules/zip.js/WebContent/';

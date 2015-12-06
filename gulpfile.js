@@ -15,7 +15,7 @@ var fs = require('fs');
 
 var grammarGlob = 'src/**/*.jison';
 var scriptsGlob = 'src/**/*.ts';
-var nodeModules = ['sql.js', 'zip.js', 'papaparse', 'systemjs', 'angular2', 'bootstrap'].map(function(x) { return 'node_modules/'+x; });
+var nodeModules = ['sql.js', 'zip.js', 'papaparse', 'systemjs', 'angular2', 'bootstrap', 'crypto'].map(function(x) { return 'node_modules/'+x; });
 
 function parserToTypeScript() {
    return through.obj(function(file, enc, cb) {
@@ -57,6 +57,15 @@ function parserToTypeScript() {
         cb();
     });
 }
+
+gulp.task('stub-crypto', function() {
+  try {
+    fs.mkdirSync('node_modules/crypto')
+    fs.writeFileSync('node_modules/crypto/index.js', '')
+  } catch (e) {
+    //ignore
+  }
+})
 
 gulp.task('scripts', function() {
     var tsconfig = JSON.parse(fs.readFileSync('tsconfig.json')).compilerOptions
@@ -110,7 +119,9 @@ gulp.task('symlink', function () {
   return gulp.src(nodeModules)
     .pipe(symlink(function (file) {
       // Here we return a path as string
-      return path.join('src/node_modules/', file.relative);
+      return path.join('dist/', file.relative);
+    }, {
+      force : true
     }));
 });
 
@@ -120,4 +131,4 @@ gulp.task('serve', serve({
   port: 8080
 }));
 
-gulp.task('dev', ['watch', 'serve', 'symlink'])
+gulp.task('dev', ['watch', 'serve', 'stub-crypto', 'symlink'])

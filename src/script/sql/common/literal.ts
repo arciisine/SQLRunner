@@ -29,6 +29,15 @@ export class Parameter extends Atom {
 	}
 }
 
+export class BooleanLiteral extends Literal {
+	constructor(public value: boolean) {
+		super()
+	}
+	toString() {
+		return `${this.value}`
+	}
+}
+
 export class StringLiteral extends Literal {
 	constructor(public value:string) {
 		super()

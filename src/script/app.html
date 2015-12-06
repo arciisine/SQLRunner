@@ -1,14 +1,16 @@
 <div class="container">
 	<h2>Database Query Interface</h2>
+	<form #form="form">
+		<select #table (change)="rebuildSelection(table.value)">
+			<option *ng-for="#table of database.tableNames" [value]="table">{{table}}</option>
+		</select>
+	</form>
 	
-	<ul class="nav nav-tabs">
-		<li role="presentation" *ng-for="#table of database.tableNames;" (click)="setTable(table)"><a href="#">{{table}}</a></li>
-	</ul>	
 	<db-results [results]="results" (order-by)="sortColumn($event)"></db-results>
 	<div class="row">
 		<div class="col-xs-6">
-			<textarea rows="10" class="form-control" (blur)="updateQuery($event.target.value)"></textarea>
-			<button (click)="runQuery()" class="btn btn-primary">Run Query</button>
+			<textarea #query rows="10" class="form-control" (blur)="updateQuery(query)"></textarea>
+			<button (click)="runQuery(query.value)" class="btn btn-primary">Run Query</button>
 		</div>
 		<div class="col-xs-6">
 			<pre class="output" [inner-html]="error"></pre>

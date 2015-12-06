@@ -7,14 +7,14 @@ import {ScalarExpr} from '../common/scalar';
 import * as util from '../util';
 
 export enum JoinType  {
-	LEFT = <any>"LEFT", 
-	RIGHT = <any>"RIGHT", 
-	INNER = <any>"INNER", 
+	LEFT = <any>"LEFT",
+	RIGHT = <any>"RIGHT",
+	INNER = <any>"INNER",
 	FULL = <any>"FULL"
 }
 export enum BinaryQueryOperator {
-	UNION = <any>"UNION", 
-	INTERSECTION = <any>"INTERSECTION", 
+	UNION = <any>"UNION",
+	INTERSECTION = <any>"INTERSECTION",
 	EXCEPT = <any>"EXCEPT"
 }
 
@@ -22,7 +22,7 @@ export abstract class SelectionExpr extends ASTNode {}
 
 export class ScalarSelectionExpr extends SelectionExpr {
 	constructor(
-		public expr:ScalarExpr, 
+		public expr:ScalarExpr,
 		public alias:string = null
 	) {
 		super()
@@ -51,6 +51,7 @@ export class QuerySelection extends ASTNode {
 		return this.distinct ? 'DISTINCT ' : ''
 	}
 }
+
 export class AllSelection extends QuerySelection {
 	constructor(distinct:boolean = false) {
 		super(distinct);
@@ -102,7 +103,7 @@ export class JoinRef extends Ref {
 export class NamedFromTableRef extends FromTableRef {
 	constructor(
 		public table:TableRef,
-		alias:string = null	
+		alias:string = null
 	) {
 		super(alias)
 	}
@@ -130,7 +131,7 @@ export class SingleSelectQuery extends SelectQuery {
 		public selection:QuerySelection,
 		public from:Array<FromTableRef>,
 		public joins:Array<JoinRef>  = null,
-		
+
 		public where:SearchCondition  = null,
 		public groupBy:Array<ColumnRef>  = null,
 		public having:SearchCondition = null

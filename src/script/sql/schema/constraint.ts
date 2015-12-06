@@ -103,8 +103,13 @@ export class ForeignKeyConstraint extends ColumnConstraint {
 	}
 }
 export class NullConstraint extends ColumnConstraint {
+	constructor(
+		public inverse:boolean = false
+	) {
+		super()
+	}
 	toString() {
-		return 'NULL';
+		return `${this.inverse ? 'NOT ' : ''} NULL`;
 	}
 }
 export class NotNullConstraint extends ColumnConstraint {

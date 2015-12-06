@@ -50,6 +50,7 @@ GO[ \t]TO                             return 'GOTO';
 "GRANT"                               return 'GRANT';
 "GROUP"                               return 'GROUP';
 "HAVING"                              return 'HAVING';
+"IF"						  	      return 'IF';
 "IN"                                  return 'IN';
 "INDICATOR"                           return 'INDICATOR';
 "INNER"                               return 'INNER';
@@ -110,12 +111,13 @@ GO[ \t]TO                             return 'GOTO';
 "WITH"                                return 'WITH';
 "WORK"                                return 'WORK';
 
+TRUE|FALSE                            return 'BOOLEAN_LITERAL';
 \'[^'\n]*\'                           return 'STRING_LITERAL';
 \d+(\.\d*)?|\.\d+                     return 'NUMBER_LITERAL';
 \d+[eE][+-]?\d+|\d\.\d*[eE][+-]?\d+|\.\d*[eE][+-]?\d+ return 'SCIENTIFIC_NUMBER_LITERAL';
 
 [A-Za-z][A-Za-z0-9_]*                {
-	if (yytext.match(/^(ABS|AVG|MIN|MAX|SUM|COUNT|FLOOR|LOWER|UPPER)$/i)) {
+	if (yytext.match(/^(ABS|AVG|MIN|MAX|SUM|COUNT|FLOOR|TOTAL|GROUP_CONCAT|LOWER|UPPER)$/i)) {
 		return 'BUILTIN_FUNCTION';
 	} else {
 		return 'IDENTIFIER';
@@ -220,7 +222,9 @@ stmt:
 	|	when_stmt	
 	;
 
-
+boolean_literal:
+		BOOLEAN_LITERAL                 { $$ = new literal.BooleanLiteral(Boolean($1))}
+	;
 
 string_literal:
 		STRING_LITERAL 					{ $$ = new literal.StringLiteral($1.substring(1, $1.length-1)); }
@@ -265,13 +269,23 @@ userName:		identifier
 alias:		identifier
 	;
 
+opt_if_exists:
+		/** empty **/
+	|	IF EXISTS
+	;
+
+opt_if_not_exists:
+		/** empty **/
+	|	IF NOT EXISTS
+	;
+
 		/* data types */
 
 opt_size:
 		/* empty */
 	|	'(' number_literal ')' 						{ $$ = $2.value }
 	;
-	
+
 opt_size_and_precision:
 		/* empty */
 	|	'(' number_literal ')' 						{ $$ = [$2.value] }
@@ -464,7 +478,7 @@ schema_drop_element:
 	;
 	
 schema_table:
-		CREATE TABLE table '(' table_element_commalist ')'	{ $$ = new create.TableSchema($3, $5); }
+		CREATE TABLE opt_if_not_exists table '(' table_element_commalist ')'	{ $$ = new create.TableSchema($4, $6, $3); }
 	;
 
 table_element_commalist:
@@ -477,14 +491,15 @@ table_element:
 	|	nameable_table_constraint_def							{ $$ = $1; }					 
 	;
 
+
 column_def:
-		column data_type column_def_opt_list					{ $$ = new create.ColumnSchema($1, $2, $3); }
+		column data_type                    					{ $$ = new create.ColumnSchema($1, $2); }
+	|   column data_type column_def_opt_list					{ $$ = new create.ColumnSchema($1, $2, $3); }
 	;
 
 column_def_opt_list:
-		/* empty */												{ $$ = []; }
-	|	column_def_opt											{ $$ = [$1]; }
-	|	column_def_opt_list column_def_opt						{ $$ = $1; $$ = $$.concat([$2]); }
+		column_def_opt											{ $$ = [$1]; }
+	|	column_def_opt_list  column_def_opt						{ $$ = $1; $$ = $$.concat([$2]); }
 	;		
 
 referential_trigger_action:
@@ -510,10 +525,9 @@ opt_referential_triggers:
 	|	update_trigger delete_trigger							{ $$ = [$1, $2] }
 	|	delete_trigger update_trigger							{ $$ = [$1, $2] }
 	;
-	
-column_def_opt:
-		NOT NULLX												{ $$ = new constraint.NotNullConstraint(); }
-	|	NULLX													{ $$ = new constraint.NullConstraint(); }
+
+column_def_opt:		
+		opt_not NULLX											{ $$ = new constraint.NullConstraint(!!$1); }
 	|	UNIQUE													{ $$ = new constraint.UniqueKeyConstraint(); }
 	|	PRIMARY KEY												{ $$ = new constraint.PrimaryKeyConstraint(); }
 	|	DEFAULT literal											{ $$ = new constraint.DefaultConstraint($1); }
@@ -556,9 +570,9 @@ opt_column_commalist:
 	;
 
 schema_view:
-		CREATE VIEW table opt_column_commalist AS select_statement opt_with_check_option
+		CREATE VIEW opt_if_not_exists table opt_column_commalist AS select_statement opt_with_check_option
 		{
-			$$ = new create.ViewSchema($3, $4, $6, !!$7)
+			$$ = new create.ViewSchema($4, $5, $7, !!$8, $3)
 		}
 	;
 
@@ -624,11 +638,11 @@ grantee:
 	;
 
 drop_table:
-	DROP TABLE table 									{ $$ = new drop.DropTableSchema($1); }
+	DROP TABLE opt_if_exists table 						{ $$ = new drop.DropTableSchema($4, $3); }
 	;
 	
 drop_view:
-	DROP VIEW table     								{ $$ = new drop.DropViewSchema($1); }
+	DROP VIEW opt_if_exists table     					{ $$ = new drop.DropViewSchema($4, $3); }
 	;	
 
 	/* cursor definition */
@@ -904,4 +918,3 @@ when_action:
 		GOTO identifier											{ $$ = new when.GotoWhenAction($2); }
 	|	CONTINUE												{ $$ = new when.ContinueWhenAction(); }
 	;
-	

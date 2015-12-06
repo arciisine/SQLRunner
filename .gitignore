@@ -2,6 +2,7 @@
 **/bower_components/**
 **/dist/**
 **/*.log
+**/script/*.js
 typings/**
 *.iml
 *.ipr

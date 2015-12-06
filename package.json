@@ -23,12 +23,12 @@
     "through2": "^2.0.0"
   },
   "dependencies": {
-    "angular2": "^2.0.0-alpha.37",
+    "angular2": "2.0.0-alpha.47",
     "bootstrap": "^3.3.5",
     "papaparse": "^4.1.2",
     "sql.js": "^0.2.21",
-    "systemjs": "^0.18.17",
-    "typescript": "^1.6.0-dev.20150908",
+    "systemjs": "^0.19.6",
+    "typescript": "^1.7.3",
     "zip.js": "git://github.com/timothysoehnlin/zip.js.git"
   }
 }
