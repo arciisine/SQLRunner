@@ -21,7 +21,7 @@ export class ColumnSchema extends ASTNode {
 		super()
 	}
 	toString() {
-		return `${util.quoteOnKeyword(this.name)} ${this.type} ${util.join(this.constraints)}`
+		return `${util.quoteOnKeyword(this.name)} ${this.type}${util.join(this.constraints, ' ', ' ')}`
 	}
 }
 
@@ -48,9 +48,7 @@ export class TableSchema extends CreateSchema {
 		this.constraints = created.filter(id => id instanceof TableConstraint);
 	}
 	toString() {
-		return `CREATE TABLE ${this.name} (
-			${util.join(this.columns, ',\n')}
-		)`
+		return `CREATE TABLE ${this.name} (\n  ${util.join(this.columns, ',\n').replace(/\n/mg, '\n  ')}\n)`
 	}
 }
 

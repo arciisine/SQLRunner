@@ -96,7 +96,7 @@ export class JoinRef extends Ref {
 		super();
 	}
 	toString() {
-		return `${this.type} JOIN ${this.table} ${this.on ? `ON ${this.on}` : ''}`;
+		return `${this.type} JOIN ${this.table} ${this.on ? `ON ${this.on.toIndentedString('\n  ')}` : ''}`;
 	}
 }
 
@@ -120,7 +120,7 @@ export class QueryFromTableRef extends FromTableRef {
 		super(alias)
 	}
 	toString() {
-		return `(\n\t${this.query.toString().replace(/\n/m, '\n\t')}\n)${super.toString()}`;
+		return `${this.query.toIndentedString('(\n  ', '\n)')}${super.toString()}`;
 	}
 }
 
@@ -143,8 +143,8 @@ export class SingleSelectQuery extends SelectQuery {
 			`SELECT ${this.selection}`,
 			postSelection || null,
 			`FROM ${util.join(this.from, ',')}`,
-			util.join(this.joins, '\n') || null,
-			this.where ? `WHERE ${this.where}` : null,
+			util.join(this.joins, '\n', '  ').toString().replace(/\n/mg, '\n  ') || null,
+			this.where ? `WHERE${this.where.toIndentedString('\n  ')}` : null,
 			this.groupBy ? `GROUP BY ${util.join(this.groupBy, ',')}` : null,
 			this.having ? `HAVING ${this.having}` : null
 		], '\n')
@@ -160,7 +160,7 @@ export class BinarySelectQuery extends SelectQuery {
 		super()
 	}
 	toString() {
-		return `${this.left}\n\n${this.operator}\n\n${this.right}`;
+		return `${this.left}\n${this.operator}\n${this.right}`;
 	}
 }
 

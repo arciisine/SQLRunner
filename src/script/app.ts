@@ -41,11 +41,7 @@ export class AppComponent {
           this.history.unshift(stmt)
           this.database.execStatement(stmt)
         })
-        
-      this.database.tableNames.forEach( name => {
-        this.canned.push([`Select from ${name}`, this.database.parse(`SELECT * FROM "${name}"`)]) 
-      })
-      
+              
       for (let key in Queries) {
         try {
           this.canned.push([key, this.database.parse(Queries[key])]);
@@ -53,6 +49,10 @@ export class AppComponent {
           console.log(e)
         }
       }
+      
+      this.database.tableNames.forEach( name => {
+        this.canned.push([`Select * from ${name}`, this.database.parse(`SELECT * FROM "${name}"`)]) 
+      })      
     })
   }
 
@@ -90,21 +90,25 @@ export class AppComponent {
 
   runQuery(query?:string|Query) {
     try {
-      if (!query && this.queryText) {
-        query = this.queryText
-      } else if (!this.queryText && !query) {
-        query = this.select
+      if (!query) {
+        if (this.queryText) {
+          query = this.queryText  
+        } else if (this.select) {
+          query = this.select  
+        }
       }
       
       if (typeof query === 'string') {
-        query = this.database.parse(query as string)[0] as select.SelectQuery
+        this.select = this.database.parse(query as string)[0] as select.SelectQuery
+      } else if (query instanceof Query) {
+        this.select = query
       }
-      
-      this.queryText = query.toString()
-      this.select = query
-      this.history.unshift(query)
 
-      this.results = this.database.execStatement(query);
+      this.queryText = this.select.toString()      
+      
+      this.history.unshift(this.select)
+
+      this.results = this.database.execStatement(this.select);
       if (this.results && Object.keys(this.results).length) {
         this.results = this.results[0]
       }

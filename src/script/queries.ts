@@ -41,7 +41,7 @@ export const Queries:{[key:string]:string} = {
 	`,
 		
 	"5. Show the unique names of all books processed by employee 'lastname5,firstname5'": `
-		SELECT DISTINCT Title
+		SELECT DISTINCT b.Title
 		FROM Book b
 			INNER JOIN Order_Detail od ON 
 				od.BookID = b.BookID
@@ -50,10 +50,10 @@ export const Queries:{[key:string]:string} = {
 			INNER JOIN Employee e ON 
 				e.EmployeeID = o.EmployeeID
 		WHERE
-			FirstName = 'firstname5'
-			AND LastName = 'lastname5'
+			e.FirstName = 'firstname5'
+			AND e.LastName = 'lastname5'
 		ORDER BY
-			Title
+			b.Title
 	`,
 	
 	"6. Show the title of most expensive books 'lastname4 firstname4' has paid for. (Among all the books 'lastname4 firstname4' has paid for, show the most expensive ones)" : `
@@ -84,8 +84,8 @@ export const Queries:{[key:string]:string} = {
 		HAVING SUM(b.UnitPrice * od.Quantity) > 70
 	`,
 	
-	"8. Show the cheapest price each customer paid and their book names. List the result in ascending price." : `
-		SELECT c.FirstName, c.LastName, 
+	"*8. Show the cheapest price each customer paid and their book names. List the result in ascending price." : `
+		SELECT c.FirstName, c.LastName 
 		FROM Customer c
 			INNER JOIN "Order" o ON o.CustomerID = c.CustomerID
 			INNER JOIN Order_Detail od ON od.OrderID = o.OrderID
@@ -128,14 +128,14 @@ export const Queries:{[key:string]:string} = {
 		FROM Book b
 			INNER JOIN Order_Detail od ON od.BookID = b.BookID
 			INNER JOIN "Order" o ON o.OrderID = od.OrderID
-			INNER JOIN Employee e ON e.EmployeeID = o.EmployeeID
-				AND (
-					(e.FirstName = 'firstname3' 
-						AND e.LastName = 'lastname3')
-					OR 
-					(e.FirstName = 'firstname4' 
-						AND e.LastName = 'lastname4')
-				)
+			INNER JOIN Customer c ON c.CustomerID = o.CustomerID
+		WHERE (
+			(c.FirstName = 'firstname3' 
+				AND c.LastName = 'lastname3')
+			OR 
+			(c.FirstName = 'firstname4' 
+				AND c.LastName = 'lastname4')
+		)
 	`,
 	
 	"12. Show the title of books ordered by 'lastname1 firstname1' but not ordered by 'lastname4 firstname4'." : `

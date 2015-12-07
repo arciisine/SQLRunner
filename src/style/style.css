@@ -47,6 +47,26 @@ db-app .list-group {
 	border-bottom-left-radius: 5px;
 }
 
+.history .list-group-item {
+	display: block;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	display: -webkit-box;
+	max-height: 75px;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
 .list-group .list-group-item:hover {
 	cursor: pointer;
+}
+
+.alert {
+    position: absolute;
+    z-index: 1000;
+    width: calc(100% - 20px);
+    top: 0;
+    left: 0;
+    margin: 10px;
 }

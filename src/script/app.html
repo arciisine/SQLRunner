@@ -12,7 +12,7 @@
 
 	<div class="row">
 		<div class="col-xs-2 canned">
-			<h3>Canned Queries</h3>
+			<h3>Written Queries</h3>
 			<div class="wrapper">
 				<ul class="list-group" *ng-if="canned.length == 0">
 					<li class="list-group-item">Loading ...</li>
@@ -40,6 +40,7 @@
 				</ul>				
 				<ul class="list-group">
 					<li #self *ng-for="#stmt of history" class="list-group-item"
+					title="{{stmt}}"
 					(mouseenter)="self.classList.add('active')"
 					 (mouseleave)="self.classList.remove('active')"
 					 (click)="queryText = stmt.toString()"
