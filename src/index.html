@@ -2,32 +2,34 @@
 <html>
 	<head>
 		<title>SQL Manager</title>
-		<link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.css">
-		<link rel="stylesheet" href="/style/style.css">
-		<script src="/node_modules/systemjs/dist/system.js"></script>
+		<link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
+		<link rel="stylesheet" href="style/style.css">
+		<script src="node_modules/systemjs/dist/system.js"></script>
 		<script>
 			System.defaultJSExtensions = true;
 			System.config({
-				baseURL: 'dist/script/'
+				//baseURL: 'dist/script/'
   			});
 			System.config({
 				map : {
-					sqljs : '/node_modules/sql.js/js/sql',
-					zipjs : '/node_modules/zip.js/WebContent/zip',
-					papaparse : '/node_modules/papaparse/papaparse.min',
+					sqljs : 'node_modules/sql.js/js/sql',
+					zipjs : 'node_modules/zip.js/WebContent/zip',
+					papaparse : 'node_modules/papaparse/papaparse.min',
 					
-					crypto: '/node_modules/crypto/index.js',
-					angular2: '/node_modules/angular2',
-					'@reactivex' : '/node_modules/angular2/node_modules/@reactivex',
-					Reflect : '/node_modules/angular2/node_modules/reflect-metadata/Reflect',
-					zonejs : '/node_modules/angular2/node_modules/zone.js/dist/zone.min'
+					crypto: 'node_modules/crypto/index.js',
+					angular2: 'node_modules/angular2',
+					'@reactivex' : 'node_modules/angular2/node_modules/@reactivex',
+					Reflect : 'node_modules/angular2/node_modules/reflect-metadata/Reflect',
+					zonejs : 'node_modules/angular2/node_modules/zone.js/dist/zone.min',
+					sql : 'dist/script/sql',
+					app : 'dist/script/app'
 				}
 			});
 			Promise
 				.all(['zipjs', 'papaparse', 'sqljs', 'Reflect', 'zonejs'].map(function(i) { return System.import(i); }))
 				.then(function(data) {
 					window.zipjs = data.shift();
-					zipjs.workerScriptsPath = '/node_modules/zip.js/WebContent/';
+					zipjs.workerScriptsPath = 'node_modules/zip.js/WebContent/';
 
 					window.Papa = data.shift();
 					window.sql = data.shift();

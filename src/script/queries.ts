@@ -85,12 +85,19 @@ export const Queries:{[key:string]:string} = {
 	`,
 	
 	"*8. Show the cheapest price each customer paid and their book names. List the result in ascending price." : `
-		SELECT c.FirstName, c.LastName 
+		SELECT DISTINCT c.FirstName, c.LastName, b.UnitPrice, b.Title
 		FROM Customer c
 			INNER JOIN "Order" o ON o.CustomerID = c.CustomerID
 			INNER JOIN Order_Detail od ON od.OrderID = o.OrderID
 			INNER JOIN Book b ON b.BookID = od.BookID
-		GROUP BY c.FirstName, c.LastName
+		WHERE b.UnitPrice = (
+			SELECT MIN(b2.UnitPrice)
+			FROM Book b2
+			INNER JOIN Order_Detail od2 ON od2.BookID = b2.BookID
+			INNER JOIN "Order" o2 ON od2.OrderID = od2.OrderID
+			WHERE o2.CustomerID = c.CustomerID
+		)
+		ORDER BY b.UnitPrice ASC
 	`,
 	
 	"9. Show the names of all the books shipped on 08/04/2014 and their shippers' names." : `
@@ -172,7 +179,7 @@ export const Queries:{[key:string]:string} = {
 			INNER JOIN "Order" o ON o.EmployeeID = e.EmployeeID
 			INNER JOIN Order_Detail od ON od.OrderID = o.OrderID
 		GROUP BY e.FirstName, e.LastName
-		HAVING SUM(od.Quantity) > 7	
+		HAVING SUM(od.Quantity) >= 8	
 	`,
 	
 	"15. Show the name of the customers who have ordered at least a book in 'category3' or 'category4' and the book names." : `
