@@ -9,6 +9,7 @@ import {Query} from 'sql/query/index'
 import * as select from 'sql/query/select'
 import * as order from 'sql/query/orderby'
 import * as ref from 'sql/common/ref'
+import * as drop from 'sql/schema/drop'
 import {Statement} from 'sql/index'
 import {Queries} from './queries';
 
@@ -25,13 +26,14 @@ export function start() {
   directives: [CORE_DIRECTIVES, FORM_DIRECTIVES].concat([DatabaseResults])
 })
 export class AppComponent {
-  select:select.SelectQuery
+  statement:Statement
   queryText:string
   database:Database
   error:string
   results:sql.Result = { values : [], columns: []}
   history:Array<Statement> = []
   canned:Array<any[]> = []
+  tables:Array<any[]> = []
 
   constructor() {
     this.database = new Database()
@@ -51,18 +53,18 @@ export class AppComponent {
       }
       
       this.database.tableNames.forEach( name => {
-        this.canned.push([`Select * from ${name}`, this.database.parse(`SELECT * FROM "${name}"`)]) 
+        this.tables.push([`${name}`, this.database.parse(`SELECT * FROM "${name}"`)]) 
       })      
     })
   }
   
   sortColumn(event) {
-    if (!(this.select instanceof select.SortableSelectQuery)) {
-      this.select = new select.SortableSelectQuery(this.select, [])
+    if (this.statement instanceof select.SelectQuery && !(this.statement instanceof select.SortableSelectQuery)) {
+      this.statement = new select.SortableSelectQuery(this.statement, [])
     }
 
-    if (this.select instanceof select.SortableSelectQuery) {
-      let sortableQuery = this.select as select.SortableSelectQuery
+    if (this.statement instanceof select.SortableSelectQuery) {
+      let sortableQuery = this.statement as select.SortableSelectQuery
 
       let orderBy = sortableQuery.orderBy && sortableQuery.orderBy[0]
 
@@ -71,34 +73,37 @@ export class AppComponent {
       } else if (event.column === orderBy.column.toString()) {
         orderBy.dir = orderBy.dir === order.OrderByDirection.ASC ? order.OrderByDirection.DESC : order.OrderByDirection.ASC;
       }
-      this.runQuery(this.select);
+      this.runQuery(this.statement);
     }
   }
-
 
   runQuery(query?:string|Query) {
     try {
       if (!query) {
         if (this.queryText) {
           query = this.queryText  
-        } else if (this.select) {
-          query = this.select  
+        } else if (this.statement) {
+          query = this.statement  
         }
       }
       
       if (typeof query === 'string') {
-        this.select = this.database.parse(query as string)[0] as select.SelectQuery
+        let stmt:Statement = this.database.parse(query as string)[0]
+        if (stmt instanceof drop.DropTableSchema) {
+          throw new Error("DROP operations are not allowed");
+        }
+        this.statement = stmt
       } else if (query instanceof Query) {
-        this.select = query
+        this.statement = query
       }
 
-      this.queryText = this.select.toString()      
+      this.queryText = this.statement.toString()      
       
       if (this.queryText != this.history[0].toString()) {
         this.history.unshift(this.database.parse(this.queryText)[0])
       }
 
-      this.results = this.database.execStatement(this.select);
+      this.results = this.database.execStatement(this.statement);
       if (this.results && Object.keys(this.results).length) {
         this.results = this.results[0]
       }

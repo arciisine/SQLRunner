@@ -11,9 +11,20 @@
 	</div>
 
 	<div class="row">
-		<div class="col-xs-2 canned">
+		<div class="col-xs-2 tables">
+			<h3>Tables</h3>
+			<div class="quarter-wrapper">
+				<ul class="list-group" *ng-if="tables.length == 0">
+					<li class="list-group-item">Loading ...</li>
+				</ul>
+				<ul class="list-group">
+					<li #self *ng-for="#query of tables" (click)="queryText = query[1].toString()"  (mouseenter)="self.classList.add('active')"
+					 (mouseleave)="self.classList.remove('active')" class="list-group-item col-xs-6">{{query[0]}}</li>
+				</ul>
+			</div>
+
 			<h3>Written Queries</h3>
-			<div class="wrapper">
+			<div class="three-quarter-wrapper">
 				<ul class="list-group" *ng-if="canned.length == 0">
 					<li class="list-group-item">Loading ...</li>
 				</ul>
@@ -30,7 +41,9 @@
 		</div>
 		<div class="col-xs-5 results">
 			<h3>Results</h3>
-			<db-results [results]="results" (order-by)="sortColumn($event)"></db-results>			
+			<div class="wrapper">
+				<db-results [results]="results" (order-by)="sortColumn($event)"></db-results>
+			</div>
 		</div>
 		<div class="col-xs-2 history">
 			<h3>History</h3>

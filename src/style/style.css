@@ -1,10 +1,14 @@
 html, body {
 	height: 100%;
+ 	overflow: hidden;
 }
+
 db-app {
 	display: block;
 	height: 100%;
 	width: 100%;
+    overflow: scroll;
+    -webkit-overflow-scrolling: touch;	
 }
 
 db-app h3 {
@@ -42,9 +46,16 @@ db-app .list-group {
 .container .row .wrapper {
 	height: calc(100% - 50px);
 	overflow-y: auto;
-	border-bottom: 1px solid #ccc;
-	border-bottom-right-radius: 5px;
-	border-bottom-left-radius: 5px;
+}
+
+.container .row .quarter-wrapper {
+	height: calc(25% - 50px);
+	overflow-y: auto;
+}
+
+.container .row .three-quarter-wrapper {
+	height: calc(75% - 50px);
+	overflow-y: auto;
 }
 
 .history .list-group-item {
