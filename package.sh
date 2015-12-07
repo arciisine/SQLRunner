@@ -10,4 +10,4 @@ gulp scripts stub-crypto
 
 mkdir dist
 rm -rf dist/tas0302.zip
-find src/ | grep -v bundle | xargs zip dist/tas0032.zip sql.txt url.txt package.js* README
+find src/ | grep -v dist | xargs zip dist/tas0032.zip sql.txt url.txt *.js* README
