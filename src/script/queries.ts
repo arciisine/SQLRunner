@@ -296,6 +296,5 @@ export const Queries:{[key:string]:string} = {
 				)
 			) t34 ON t34.CustomerID = c.CustomerID
 		
-	`,
-	
+	`
 };

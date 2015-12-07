@@ -12,7 +12,9 @@ db-app {
 }
 
 db-app h3 {
-	margin-top: 0;
+	margin: 0;
+	padding: 0;
+	line-height: 36px;
 }
 
 db-app>.container {
@@ -50,7 +52,7 @@ db-app .list-group {
 
 .container .row .quarter-wrapper {
 	height: calc(25% - 50px);
-	overflow-y: auto;
+	overflow: none;
 }
 
 .container .row .three-quarter-wrapper {

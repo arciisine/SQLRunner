@@ -52,7 +52,7 @@ export class AppComponent {
         }
       }
       
-      this.database.tableNames.forEach( name => {
+      this.database.tableNames.map(x => x.replace(/"/g, '')).sort().forEach( name => {
         this.tables.push([`${name}`, this.database.parse(`SELECT * FROM "${name}"`)]) 
       })      
     })
