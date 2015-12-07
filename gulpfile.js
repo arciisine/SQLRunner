@@ -119,7 +119,7 @@ gulp.task('symlink', function () {
   return gulp.src(nodeModules)
     .pipe(symlink(function (file) {
       // Here we return a path as string
-      return path.join('dist/', file.relative);
+      return path.join('src/dist/', file.relative);
     }, {
       force : true
     }));

@@ -1,0 +1,13 @@
+#How to Run Locally
+
+#Dependencies, Ensure Installed
+node
+npm
+
+#Steps to Install
+npm install -g gulp
+npm install
+
+#How to run 
+gulp dev
+open browser to localhost:8080

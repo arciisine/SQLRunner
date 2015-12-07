@@ -2,9 +2,9 @@
 <html>
 	<head>
 		<title>SQL Manager</title>
-		<link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
+		<link rel="stylesheet" href="dist/bootstrap/dist/css/bootstrap.css">
 		<link rel="stylesheet" href="style/style.css">
-		<script src="node_modules/systemjs/dist/system.js"></script>
+		<script src="dist/systemjs/dist/system.js"></script>
 		<script>
 			System.defaultJSExtensions = true;
 			System.config({
@@ -12,15 +12,15 @@
   			});
 			System.config({
 				map : {
-					sqljs : 'node_modules/sql.js/js/sql',
-					zipjs : 'node_modules/zip.js/WebContent/zip',
-					papaparse : 'node_modules/papaparse/papaparse.min',
+					sqljs : 'dist/sql.js/js/sql',
+					zipjs : 'dist/zip.js/WebContent/zip',
+					papaparse : 'dist/papaparse/papaparse.min',
 					
-					crypto: 'node_modules/crypto/index.js',
-					angular2: 'node_modules/angular2',
-					'@reactivex' : 'node_modules/angular2/node_modules/@reactivex',
-					Reflect : 'node_modules/angular2/node_modules/reflect-metadata/Reflect',
-					zonejs : 'node_modules/angular2/node_modules/zone.js/dist/zone.min',
+					crypto: 'dist/crypto/index.js',
+					angular2: 'dist/angular2',
+					'@reactivex' : 'dist/angular2/node_modules/@reactivex',
+					Reflect : 'dist/angular2/node_modules/reflect-metadata/Reflect',
+					zonejs : 'dist/angular2/node_modules/zone.js/dist/zone.min',
 					sql : 'dist/script/sql',
 					app : 'dist/script/app'
 				}
@@ -29,7 +29,7 @@
 				.all(['zipjs', 'papaparse', 'sqljs', 'Reflect', 'zonejs'].map(function(i) { return System.import(i); }))
 				.then(function(data) {
 					window.zipjs = data.shift();
-					zipjs.workerScriptsPath = 'node_modules/zip.js/WebContent/';
+					zipjs.workerScriptsPath = 'dist/zip.js/WebContent/';
 
 					window.Papa = data.shift();
 					window.sql = data.shift();
