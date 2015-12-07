@@ -55,18 +55,6 @@ export class AppComponent {
       })      
     })
   }
-
-  updateQuery() {
-    try {
-      let query = this.database.parse(this.queryText)[0]
-      if (query instanceof select.SelectQuery || query instanceof select.SortableSelectQuery) {
-        this.select = query
-      }
-    } catch (e) {
-      console.log(this.select.toString());
-      this.error = e.message.replace(/^\s+/g, '')
-    }
-  }
   
   sortColumn(event) {
     if (!(this.select instanceof select.SortableSelectQuery)) {
@@ -106,7 +94,9 @@ export class AppComponent {
 
       this.queryText = this.select.toString()      
       
-      this.history.unshift(this.select)
+      if (this.queryText != this.history[0].toString()) {
+        this.history.unshift(this.database.parse(this.queryText)[0])
+      }
 
       this.results = this.database.execStatement(this.select);
       if (this.results && Object.keys(this.results).length) {
