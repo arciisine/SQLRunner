@@ -6,7 +6,7 @@ npm install
 
 gulp scripts stub-crypto
 
-rsync -Lazv src/ -e ssh tas0032@mallard.auburn.edu:~/public_html/query
+#rsync -Lazv src/ -e ssh tas0032@mallard.auburn.edu:~/public_html/query
 
 (echo '{' && (cat src/dist/script/queries.js | grep 'SELECT'  | sed -e 's/\\n//g' -e 's/\\t/ /g')  && echo '}') | jq  -r 'map(.) | join("\n")' > sql.txt
 

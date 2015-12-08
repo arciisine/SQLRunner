@@ -131,4 +131,4 @@ gulp.task('serve', serve({
   port: 8080
 }));
 
-gulp.task('dev', ['watch', 'serve', 'stub-crypto', 'symlink'])
+gulp.task('dev', ['stub-crypto', 'symlink', 'serve', 'watch', 'scripts'])

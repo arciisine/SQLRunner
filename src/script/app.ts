@@ -104,8 +104,13 @@ export class AppComponent {
       }
 
       this.results = this.database.execStatement(this.statement);
-      if (this.results && Object.keys(this.results).length) {
+      
+      if (Array.isArray(this.results)) {
         this.results = this.results[0]
+      }
+      
+      if (!this.results) {
+        this.results = {values:[], columns:[]};
       }
 
       console.log(this.results);
