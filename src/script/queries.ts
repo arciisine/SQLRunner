@@ -84,7 +84,7 @@ export const Queries:{[key:string]:string} = {
 		HAVING SUM(b.UnitPrice * od.Quantity) > 70
 	`,
 	
-	"*8. Show the cheapest price each customer paid and their book names. List the result in ascending price." : `
+	"8. Show the cheapest price each customer paid and their book names. List the result in ascending price." : `
 		SELECT DISTINCT c.FirstName, c.LastName, b.UnitPrice, b.Title
 		FROM Customer c
 			INNER JOIN "Order" o ON o.CustomerID = c.CustomerID
@@ -173,7 +173,7 @@ export const Queries:{[key:string]:string} = {
 		ORDER BY Qty DESC
 	`,
 	
-	"*14. Show the names of the employees who processed at least 8 books." : `
+	"14. Show the names of the employees who processed at least 8 books." : `
 		SELECT e.FirstName, e.LastName
 		FROM Employee e
 			INNER JOIN "Order" o ON o.EmployeeID = e.EmployeeID
@@ -183,7 +183,7 @@ export const Queries:{[key:string]:string} = {
 	`,
 	
 	"15. Show the name of the customers who have ordered at least a book in 'category3' or 'category4' and the book names." : `
-		SELECT c.FirstName, c.LastName, b.Title
+		SELECT DISTINCT c.FirstName,c.LastName
 		FROM Book b
 			INNER JOIN Order_Detail od ON od.BookID = b.BookID
 			INNER JOIN "Order" o ON o.OrderID = od.OrderID
@@ -232,7 +232,7 @@ export const Queries:{[key:string]:string} = {
 			)
 	`,
 		
-	"*19. Show the names of customers who have ordered more than 3 book and the corresponding quantities. List the result in the descending quantity." : `
+	"19. Show the names of customers who have ordered more than 3 book and the corresponding quantities. List the result in the descending quantity." : `
 		SELECT c.FirstName, c.LastName, SUM(od.Quantity) qty
 		FROM Customer c
 			INNER JOIN "Order" o ON o.CustomerID = c.CustomerID
